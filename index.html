@@ -172,7 +172,25 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   <div class="g3">
     <div><label>NHS number</label><input id="ptNHS" type="text" placeholder="000 000 0000"></div>
     <div><label>Sex</label><select id="ptSex"><option value="">Select</option><option>Male</option><option>Female</option><option>Other / prefer not to say</option></select></div>
-    <div><label>Postcode</label><input id="ptPostcode" type="text" placeholder="N14 6HT" style="text-transform:uppercase"></div>
+    <div>
+      <label>Postcode <span id="pcLookupSpinner" style="display: none; font-size: 11px; color: var(--info-text);">↻ looking up...</span></label>
+      <div style="display:flex;gap:6px">
+        <input id="ptPostcode" type="text" placeholder="EH1 1YZ" style="text-transform:uppercase;flex:1" oninput="this.value=this.value.toUpperCase()" onblur="lookupPostcode()">
+        <button class="btn" onclick="lookupPostcode()" style="font-size:11px;padding:0 10px" title="Look up address">🔍</button>
+      </div>
+    </div>
+  </div>
+  <!-- Address fields (auto-filled from postcode lookup) -->
+  <div class="g1" id="ptAddressRow">
+    <div>
+      <label>Full address <span style="font-size:11px;color:var(--text3)">(auto-filled from postcode or enter manually)</span></label>
+      <input id="ptAddress" type="text" placeholder="Address line 1, town/city" style="">
+    </div>
+  </div>
+  <!-- Patient contact -->
+  <div class="g2">
+    <div><label>Patient phone / mobile</label><input id="ptPhone" type="tel" placeholder="e.g. 07700 900000 or 0131 000 0000"></div>
+    <div><label>Patient email <span style="font-size:11px;color:var(--text3)">(optional)</span></label><input id="ptEmail" type="email" placeholder="patient@example.com"></div>
   </div>
   <div class="g2">
     <div><label>Allergies / ADRs</label><input id="ptAllergies" type="text" placeholder="NKDA or list here"></div>
@@ -198,6 +216,44 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <div><label>Pharmacy phone / ODS code</label><input id="pharmPhone" type="text" placeholder="e.g. 020 8362 4400 / FT284"></div>
   </div>
 </div>
+
+<!-- GP SURGERY LOOKUP CARD -->
+<div class="card">
+  <h2>🏠 GP surgery lookup</h2>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Search for the patient's GP surgery. <strong>Scotland:</strong> searches the full Public Health Scotland database (~900 practices, April 2025) with address and phone number. <strong>England/Wales:</strong> uses NHS ODS. Requires internet connection — enter manually if offline.</p>
+  <div style="background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--info-text)">
+    🏴 <strong>Source:</strong> Scotland → Public Health Scotland Open Data (CKAN) &nbsp;|&nbsp; England/Wales → NHS ODS ORD API &nbsp;|&nbsp; N.Ireland → HSC/ODS lookup &nbsp;|&nbsp; All free, no authentication required
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <div style="flex:1;min-width:200px">
+      <label>Search GP surgery by name or postcode <span style="font-size:11px;color:var(--text3)">(nation set on Patient tab)</span></label>
+      <input id="gpSearchInput" type="text" placeholder="e.g. Woodside Health Centre, Inverleith, EH4 1NL, Mearns..." oninput="gpSearchDebounce()">
+    </div>
+    <div style="align-self:flex-end;display:flex;gap:6px;align-items:center">
+      <button class="btn btn-primary" onclick="searchGPSurgeries()" style="font-size:12px">🔍 Search</button>
+      <span id="gpSearchSpinner" style="display: none; font-size: 11px; color: var(--info-text);">↻ searching...</span>
+    </div>
+  </div>
+  <div id="gpSearchResults" style="display: none; max-height: 300px; overflow-y: auto; border: 0.5px solid var(--border); border-radius: var(--radius); background: var(--bg); margin-bottom: 8px;">
+    <div id="gpResultsList"><div style="padding:4px 14px 4px;font-size:10px;color:var(--text3);background:var(--bg2);border-bottom:0.5px solid var(--border)">10 results from <strong>NHS Scotland (PHS Open Data)</strong> — click to select</div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(0)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Maryhill Health Centre</div><div style="font-size:11px;color:var(--text3);margin-top:2px">41 Shawpark Street, Glasgow, G20 9DR &nbsp;•&nbsp; 📞 0141 531 8300 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(1)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Parkhead Health Centre</div><div style="font-size:11px;color:var(--text3);margin-top:2px">101 Salamanca Street, Glasgow, G31 5BA &nbsp;•&nbsp; 📞 0141 531 8200 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(2)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Possilpark Health Centre</div><div style="font-size:11px;color:var(--text3);margin-top:2px">21 Denmark Street, Glasgow, G22 5EG &nbsp;•&nbsp; 📞 0141 531 6850 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(3)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">The Nelson Practice</div><div style="font-size:11px;color:var(--text3);margin-top:2px">GRI Health Centre, Alexandra Parade, Glasgow, G31 2ER &nbsp;•&nbsp; 📞 0141 211 8300 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(4)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Paisley Health Centre</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Mill Street, Paisley, Renfrewshire, PA1 1LH &nbsp;•&nbsp; 📞 0141 887 6271 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(5)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Inverclyde Royal Hospital</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Larkfield Road, Greenock, Inverclyde, PA16 0XN &nbsp;•&nbsp; 📞 01475 633777 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(6)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">RAH Medical Practice</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Royal Alexandra Hospital, Corsebar Road, Paisley, PA2 9PN &nbsp;•&nbsp; 📞 0141 887 9111 &nbsp;•&nbsp; <em>NHS Greater Glasgow and Clyde</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(7)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Cupar Medical Centre</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Limes House, Cupar, Fife, KY15 5NL &nbsp;•&nbsp; 📞 01334 652666 &nbsp;•&nbsp; <em>NHS Fife</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(8)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Galashiels Medical Practice</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Gala Park, Galashiels, Scottish Borders, TD1 1TH &nbsp;•&nbsp; 📞 01896 660600 &nbsp;•&nbsp; <em>NHS Borders</em></div></div><div style="padding: 9px 14px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectGP(9)"><div style="font-size:13px;font-weight:700;color:var(--info-text)">Peebles Medical Practice</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Hay Lodge Health Centre, Neidpath Road, Peebles, EH45 8JG &nbsp;•&nbsp; 📞 01721 721226 &nbsp;•&nbsp; <em>NHS Borders</em></div></div></div>
+  </div>
+  <div style="margin-top:10px" id="gpManualSection">
+    <p class="slabel" style="margin-bottom:6px">GP practice details (selected or enter manually)</p>
+    <div class="g2">
+      <div><label>GP practice name</label><input id="gpName" type="text" placeholder="e.g. Southgate Medical Centre" style=""></div>
+      <div><label>GP practice address</label><input id="gpAddr" type="text" placeholder="e.g. 22 The Bourne, London N14 6RA"></div>
+    </div>
+    <div class="g3">
+      <div><label>GP phone</label><input id="gpPhone" type="tel" placeholder="e.g. 020 8882 1100"></div>
+      <div><label>GP fax</label><input id="gpFax" type="tel" placeholder="e.g. 020 8882 1101"></div>
+      <div><label>GP email / SCI Gateway</label><input id="gpEmail" type="text" placeholder="e.g. practice@nhs.net"></div>
+    </div>
+    <div class="g2">
+      <div><label>Consultant / secondary care (if relevant)</label><input id="consultantName" type="text" placeholder="e.g. Mr J. Smith, ENT"></div>
+      <div><label>Hospital / trust</label><input id="consultantHospital" type="text" placeholder="e.g. NHS Lothian / Royal Infirmary Edinburgh"></div>
+    </div>
+  </div>
+</div>
 <div class="nav-row no-print"><span></span><button class="btn btn-primary" onclick="goStep(1)">Next: presenting complaint →</button></div>
 </div>
 
@@ -205,27 +261,27 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 <div id="step1" class="step-panel">
 <div class="card">
   <h2>Presenting complaint</h2>
-  <div class="g1"><div><label>Main complaint in patient's own words</label><textarea id="pcMain" placeholder="e.g. 'I've had right ear pain and discharge for 4 days. I've had a perforated eardrum before and I'm worried it's infected again.'"></textarea></div></div>
+  <div class="g1"><div><label>Main complaint in patient's own words</label><textarea id="pcMain" placeholder="e.g. 'I've had right ear pain and a yellow discharge for 4 days. I had a perforated eardrum before and I'm worried it's infected again.'"></textarea></div></div>
   <div class="g3">
-    <div><label>Duration</label><input id="pcDuration" type="text" placeholder="e.g. 4 days"></div>
+    <div><label>Duration</label><input id="pcDuration" type="text" placeholder="e.g. 4 days, 2 weeks"></div>
     <div><label>Onset</label><select id="pcOnset"><option value="">Select</option><option>Sudden</option><option>Gradual</option><option>Intermittent</option><option>Progressive</option></select></div>
     <div><label>Severity (1–10)</label><input id="pcSeverity" type="number" min="1" max="10" placeholder="1–10"></div>
   </div>
   <div class="g2">
-    <div><label>Character / quality</label><input id="pcChar" type="text" placeholder="e.g. throbbing, sharp, burning"></div>
-    <div><label>Radiation / spread</label><input id="pcRad" type="text" placeholder="e.g. no radiation"></div>
+    <div><label>Character / quality</label><input id="pcChar" type="text" placeholder="e.g. throbbing, sharp, burning, dull ache, stabbing"></div>
+    <div><label>Radiation / spread</label><input id="pcRad" type="text" placeholder="e.g. no radiation / radiates to jaw / spreads to neck"></div>
   </div>
   <div class="g2">
-    <div><label>Aggravating factors</label><input id="pcAgg" type="text" placeholder="What makes it worse?"></div>
-    <div><label>Relieving factors</label><input id="pcRelief" type="text" placeholder="What makes it better?"></div>
+    <div><label>Aggravating factors</label><input id="pcAgg" type="text" placeholder="e.g. touching ear, swallowing, movement, cold air, exertion"></div>
+    <div><label>Relieving factors</label><input id="pcRelief" type="text" placeholder="e.g. paracetamol partial, warmth, rest, sitting forward"></div>
   </div>
   <div class="g2">
-    <div><label>Associated symptoms</label><input id="pcAssoc" type="text" placeholder="e.g. conductive hearing loss, no fever, no facial weakness"></div>
-    <div><label>Previous treatment tried</label><input id="pcPrev" type="text" placeholder="e.g. OTC olive oil drops — no benefit"></div>
+    <div><label>Associated symptoms</label><input id="pcAssoc" type="text" placeholder="e.g. conductive hearing loss, no fever, no facial weakness, no nausea"></div>
+    <div><label>Previous treatment tried</label><input id="pcPrev" type="text" placeholder="e.g. OTC olive oil drops — no benefit / paracetamol — partial relief"></div>
   </div>
-  <div class="g1"><div><label>ICE — ideas, concerns and expectations</label><textarea id="pcICE" placeholder="Ideas: what does the patient think is causing this?
-Concerns: what are they worried about?
-Expectations: what do they hope you can do today?"></textarea></div></div>
+  <div class="g1"><div><label>ICE — ideas, concerns and expectations</label><textarea id="pcICE" placeholder="Ideas: what does the patient think is causing this? (e.g. 'thinks it's the same ear infection as before')
+Concerns: what are they worried about? (e.g. 'worried about permanent hearing damage')
+Expectations: what do they hope you can do today? (e.g. 'hoping for antibiotic ear drops as ENT previously prescribed')"></textarea></div></div>
   <div class="g3">
     <div><label>Smoking status</label><select id="pcSmoke"><option value="">Select</option><option>Never smoked</option><option>Ex-smoker</option><option>Current smoker</option></select></div>
     <div><label>Pack years (if applicable)</label><input id="pcPY" type="text" placeholder="e.g. 20 pack years"></div>
@@ -240,7 +296,19 @@ Expectations: what do they hope you can do today?"></textarea></div></div>
 <div class="card">
   <h2>Systems review</h2>
   <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Expand each system. Tick symptoms (blue) and red flags (red). Evidence links and prompts appear automatically.</p>
-  <div class="sys-grid" id="sysGrid"><div class="sys-card" id="sc-constitutional"><div class="sys-top"><div class="sys-name">Constitutional</div><span id="fp-constitutional" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-constitutional">Tap to assess</div><div class="sys-detail" id="det-constitutional"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="constitutional" data-type="sym" data-idx="0">Fever / rigors</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="1">Night sweats</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="2">Unintentional weight loss</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="3">Fatigue / lethargy</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="4">Pallor</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="5">Anorexia</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="constitutional" data-type="flag" data-idx="0">B-symptoms: fever + night sweats + weight loss</button><button class="cpill" data-key="constitutional" data-type="flag" data-idx="1">Unintentional weight loss &gt;5% in 6 months</button><button class="cpill" data-key="constitutional" data-type="flag" data-idx="2">Pallor + fatigue + bruising</button></div><div id="fd-constitutional"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-constitutional" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12 (2023). B-symptoms → urgent haematology.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng12" target="_blank" rel="noopener" class="evlink evlink-nice" title="Suspected cancer referral">NICE NG12 ↗</a><a href="https://cks.nice.org.uk/topics/weight-loss-unintentional/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Weight loss — unintentional">CKS ↗</a></div></div></div></div><div class="sys-card" id="sc-cardio"><div class="sys-top"><div class="sys-name">Cardiovascular</div><span id="fp-cardio" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-cardio">Tap to assess</div><div class="sys-detail" id="det-cardio"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="cardio" data-type="sym" data-idx="0">Chest pain</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="1">Palpitations</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="2">Dyspnoea at rest</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="3">Orthopnoea</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="4">Ankle oedema</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="5">Unwarned syncope</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="6">Exertional breathlessness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="cardio" data-type="flag" data-idx="0">Crushing chest pain ± arm/jaw radiation</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="1">Acute tearing chest/back pain</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="2">Unwarned syncope</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="3">SpO2 &lt;94% + breathlessness</button></div><div id="fd-cardio"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-cardio" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG167. NICE CG108. NICE NG136. NEWS2.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/cg167" target="_blank" rel="noopener" class="evlink evlink-nice" title="ACS chest pain">NICE CG167 ↗</a><a href="https://cks.nice.org.uk/topics/chest-pain/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Chest pain">CKS Chest pain ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/cardiovascular-disease-risk/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Cardiovascular drugs">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-resp"><div class="sys-top"><div class="sys-name">Respiratory</div><span id="fp-resp" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-resp">Tap to assess</div><div class="sys-detail" id="det-resp"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="resp" data-type="sym" data-idx="0">Cough &gt;3 weeks</button><button class="cpill" data-key="resp" data-type="sym" data-idx="1">Haemoptysis</button><button class="cpill" data-key="resp" data-type="sym" data-idx="2">Dyspnoea</button><button class="cpill" data-key="resp" data-type="sym" data-idx="3">Wheeze</button><button class="cpill" data-key="resp" data-type="sym" data-idx="4">Pleuritic chest pain</button><button class="cpill" data-key="resp" data-type="sym" data-idx="5">Stridor</button><button class="cpill" data-key="resp" data-type="sym" data-idx="6">Purulent sputum</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="resp" data-type="flag" data-idx="0">Haemoptysis in anyone &gt;40yrs</button><button class="cpill" data-key="resp" data-type="flag" data-idx="1">Stridor</button><button class="cpill" data-key="resp" data-type="flag" data-idx="2">SpO2 &lt;94% at rest</button><button class="cpill" data-key="resp" data-type="flag" data-idx="3">Sudden pleuritic pain + breathlessness</button></div><div id="fd-resp"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-resp" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. BTS/SIGN asthma 2023. GOLD COPD 2024.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/asthma/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Asthma in adults">CKS Asthma ↗</a><a href="https://cks.nice.org.uk/topics/chronic-obstructive-pulmonary-disease/" target="_blank" rel="noopener" class="evlink evlink-cks" title="COPD">CKS COPD ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/asthma-chronic/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Respiratory prescribing">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-gi"><div class="sys-top"><div class="sys-name">Gastrointestinal</div><span id="fp-gi" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-gi">Tap to assess</div><div class="sys-detail" id="det-gi"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="gi" data-type="sym" data-idx="0">Dysphagia</button><button class="cpill" data-key="gi" data-type="sym" data-idx="1">Haematemesis/melaena</button><button class="cpill" data-key="gi" data-type="sym" data-idx="2">Rectal bleeding</button><button class="cpill" data-key="gi" data-type="sym" data-idx="3">Bowel habit change</button><button class="cpill" data-key="gi" data-type="sym" data-idx="4">Abdominal pain</button><button class="cpill" data-key="gi" data-type="sym" data-idx="5">Abdominal mass</button><button class="cpill" data-key="gi" data-type="sym" data-idx="6">Jaundice</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="gi" data-type="flag" data-idx="0">Progressive dysphagia</button><button class="cpill" data-key="gi" data-type="flag" data-idx="1">Haematemesis or melaena</button><button class="cpill" data-key="gi" data-type="flag" data-idx="2">Rectal bleeding ≥50yrs</button><button class="cpill" data-key="gi" data-type="flag" data-idx="3">New onset jaundice</button><button class="cpill" data-key="gi" data-type="flag" data-idx="4">Abdominal mass</button></div><div id="fd-gi"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-gi" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE CG141. BSG rectal bleeding.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/dyspepsia-proven-gord/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Dyspepsia">CKS Dyspepsia ↗</a><a href="https://cks.nice.org.uk/topics/irritable-bowel-syndrome/" target="_blank" rel="noopener" class="evlink evlink-cks" title="IBS">CKS IBS ↗</a></div></div></div></div><div class="sys-card" id="sc-gu"><div class="sys-top"><div class="sys-name">Genitourinary</div><span id="fp-gu" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-gu">Tap to assess</div><div class="sys-detail" id="det-gu"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="gu" data-type="sym" data-idx="0">Visible haematuria</button><button class="cpill" data-key="gu" data-type="sym" data-idx="1">Dysuria/frequency</button><button class="cpill" data-key="gu" data-type="sym" data-idx="2">Urinary hesitancy</button><button class="cpill" data-key="gu" data-type="sym" data-idx="3">Post-menopausal bleeding</button><button class="cpill" data-key="gu" data-type="sym" data-idx="4">Testicular lump</button><button class="cpill" data-key="gu" data-type="sym" data-idx="5">Pelvic pain</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="gu" data-type="flag" data-idx="0">Visible haematuria</button><button class="cpill" data-key="gu" data-type="flag" data-idx="1">Post-menopausal bleeding ≥55yrs</button><button class="cpill" data-key="gu" data-type="flag" data-idx="2">New testicular mass</button></div><div id="fd-gu"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-gu" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE NG109. Pharmacy First UTI.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/urinary-tract-infection-lower-women/" target="_blank" rel="noopener" class="evlink evlink-cks" title="UTI (lower) — women">CKS UTI ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/urinary-tract-infections/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="UTI prescribing">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-neuro"><div class="sys-top"><div class="sys-name">Neurological</div><span id="fp-neuro" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-neuro">Tap to assess</div><div class="sys-detail" id="det-neuro"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="neuro" data-type="sym" data-idx="0">Thunderclap headache</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="1">Focal weakness</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="2">Sensory disturbance</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="3">Acute visual change</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="4">New seizure</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="5">Progressive limb weakness</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="6">Confusion</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="neuro" data-type="flag" data-idx="0">Thunderclap headache — worst ever</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="1">FAST positive — acute focal deficit</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="2">New seizure in adult</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="3">Bladder/bowel + limb weakness</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="4">Headache + fever + neck stiffness</button></div><div id="fd-neuro"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-neuro" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG176. NICE NG217. NICE NG150.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/cg176" target="_blank" rel="noopener" class="evlink evlink-nice" title="Stroke and TIA">NICE CG176 ↗</a><a href="https://cks.nice.org.uk/topics/headache-assessment/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Headache assessment">CKS Headache ↗</a></div></div></div></div><div class="sys-card" id="sc-msk"><div class="sys-top"><div class="sys-name">Musculoskeletal</div><span id="fp-msk" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-msk">Tap to assess</div><div class="sys-detail" id="det-msk"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="msk" data-type="sym" data-idx="0">Acute joint swelling+warmth</button><button class="cpill" data-key="msk" data-type="sym" data-idx="1">Morning stiffness &gt;1hr</button><button class="cpill" data-key="msk" data-type="sym" data-idx="2">Radicular back pain</button><button class="cpill" data-key="msk" data-type="sym" data-idx="3">Bone pain at night</button><button class="cpill" data-key="msk" data-type="sym" data-idx="4">Hot swollen single joint</button><button class="cpill" data-key="msk" data-type="sym" data-idx="5">Progressive weakness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="msk" data-type="flag" data-idx="0">Back pain + bladder/bowel dysfunction</button><button class="cpill" data-key="msk" data-type="flag" data-idx="1">Hot single joint + fever</button><button class="cpill" data-key="msk" data-type="flag" data-idx="2">Back pain + known malignancy</button><button class="cpill" data-key="msk" data-type="flag" data-idx="3">Bone pain + weight loss + age &gt;50</button></div><div id="fd-msk"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-msk" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG59. NICE NG100. NICE NG226.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/back-pain-low-without-radiculopathy/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Low back pain">CKS Back pain ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/non-steroidal-anti-inflammatory-drugs/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="NSAIDs">BNF NSAIDs ↗</a></div></div></div></div><div class="sys-card" id="sc-derm"><div class="sys-top"><div class="sys-name">Dermatological</div><span id="fp-derm" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-derm">Tap to assess</div><div class="sys-detail" id="det-derm"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="derm" data-type="sym" data-idx="0">Changing mole (ABCDE)</button><button class="cpill" data-key="derm" data-type="sym" data-idx="1">Non-blanching rash</button><button class="cpill" data-key="derm" data-type="sym" data-idx="2">Spreading cellulitis</button><button class="cpill" data-key="derm" data-type="sym" data-idx="3">New lesion &gt;6mm</button><button class="cpill" data-key="derm" data-type="sym" data-idx="4">Blistering rash</button><button class="cpill" data-key="derm" data-type="sym" data-idx="5">Itch + jaundice</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="derm" data-type="flag" data-idx="0">Purpuric non-blanching rash + systemic illness</button><button class="cpill" data-key="derm" data-type="flag" data-idx="1">ABCDE change in pigmented lesion</button><button class="cpill" data-key="derm" data-type="flag" data-idx="2">Widespread blistering (TEN/SJS)</button><button class="cpill" data-key="derm" data-type="flag" data-idx="3">Spreading cellulitis + systemic fever</button></div><div id="fd-derm"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-derm" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE CG129. BAD cellulitis guideline.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/eczema-atopic/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Eczema — atopic">CKS Eczema ↗</a><a href="https://cks.nice.org.uk/topics/cellulitis-acute/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Cellulitis">CKS Cellulitis ↗</a></div></div></div></div><div class="sys-card" id="sc-haem"><div class="sys-top"><div class="sys-name">Haematological</div><span id="fp-haem" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-haem">Tap to assess</div><div class="sys-detail" id="det-haem"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="haem" data-type="sym" data-idx="0">Easy bruising</button><button class="cpill" data-key="haem" data-type="sym" data-idx="1">Petechiae/purpura</button><button class="cpill" data-key="haem" data-type="sym" data-idx="2">Lymphadenopathy</button><button class="cpill" data-key="haem" data-type="sym" data-idx="3">Pallor+fatigue</button><button class="cpill" data-key="haem" data-type="sym" data-idx="4">Recurrent infections</button><button class="cpill" data-key="haem" data-type="sym" data-idx="5">Splenomegaly</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="haem" data-type="flag" data-idx="0">Petechiae + fever + systemic illness</button><button class="cpill" data-key="haem" data-type="flag" data-idx="1">Lymphadenopathy &gt;3 weeks</button><button class="cpill" data-key="haem" data-type="flag" data-idx="2">Severe pallor + haemodynamic compromise</button></div><div id="fd-haem"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-haem" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE NG8. FBC + film first-line.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng12" target="_blank" rel="noopener" class="evlink evlink-nice" title="Suspected blood cancer">NICE NG8 ↗</a><a href="https://cks.nice.org.uk/topics/anaemia-iron-deficiency/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Anaemia — iron deficiency">CKS Anaemia ↗</a></div></div></div></div><div class="sys-card" id="sc-endo"><div class="sys-top"><div class="sys-name">Endocrine</div><span id="fp-endo" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-endo">Tap to assess</div><div class="sys-detail" id="det-endo"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="endo" data-type="sym" data-idx="0">Polyuria + polydipsia</button><button class="cpill" data-key="endo" data-type="sym" data-idx="1">Unexplained weight change</button><button class="cpill" data-key="endo" data-type="sym" data-idx="2">Heat/cold intolerance</button><button class="cpill" data-key="endo" data-type="sym" data-idx="3">Tremor + palpitations</button><button class="cpill" data-key="endo" data-type="sym" data-idx="4">Proximal weakness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="endo" data-type="flag" data-idx="0">Polyuria + polydipsia + weight loss (young patient)</button><button class="cpill" data-key="endo" data-type="flag" data-idx="1">Drowsy diabetic patient</button><button class="cpill" data-key="endo" data-type="flag" data-idx="2">Suspected adrenal crisis</button></div><div id="fd-endo"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-endo" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG17. NICE NG28. NICE NG145. Sick day rules.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng28" target="_blank" rel="noopener" class="evlink evlink-nice" title="Type 2 diabetes">NICE NG28 ↗</a><a href="https://cks.nice.org.uk/topics/diabetes-type-2/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Diabetes — type 2">CKS Diabetes ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/diabetes/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Diabetes prescribing">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-ent"><div class="sys-top"><div class="sys-name">ENT / Eyes</div><span id="fp-ent" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-ent">Tap to assess</div><div class="sys-detail" id="det-ent"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="ent" data-type="sym" data-idx="0">Sudden visual loss</button><button class="cpill" data-key="ent" data-type="sym" data-idx="1">Painful red eye + photophobia</button><button class="cpill" data-key="ent" data-type="sym" data-idx="2">Severe eye pain + halos</button><button class="cpill" data-key="ent" data-type="sym" data-idx="3">Hoarseness &gt;3 weeks</button><button class="cpill" data-key="ent" data-type="sym" data-idx="4">Head/neck mass &gt;3 weeks</button><button class="cpill" data-key="ent" data-type="sym" data-idx="5">Unilateral SNHL + tinnitus</button><button class="cpill" data-key="ent" data-type="sym" data-idx="6">Otalgia + discharge</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="ent" data-type="flag" data-idx="0">Sudden painless visual loss</button><button class="cpill" data-key="ent" data-type="flag" data-idx="1">Acute angle closure glaucoma features</button><button class="cpill" data-key="ent" data-type="flag" data-idx="2">Hoarseness &gt;3 weeks + age &gt;45yrs</button><button class="cpill" data-key="ent" data-type="flag" data-idx="3">Head/neck mass &gt;3 weeks</button></div><div id="fd-ent"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-ent" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12 (England/Wales). NICE CKS otitis externa (May 2024). Scotland: NHS Inform ENT guidance; CPS/NES Pharmacy First Plus scope includes otitis externa, allergic rhinitis. IMPORTANT: Aminoglycosides CONTRAINDICATED with perforated TM — ototoxicity. Ciprofloxacin/dexamethasone drops are the non-ototoxic option. Note: dexamethasone may delay TM healing (PubMed PMID 20010446).<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/otitis-externa/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Otitis externa (May 2024)">CKS Otitis externa ↗</a><a href="https://cks.nice.org.uk/topics/otitis-media-acute/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Otitis media — acute">CKS AOM ↗</a><a href="https://bnf.nice.org.uk/drugs/ciprofloxacin/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Ear preparations">BNF Ear ↗</a><a href="https://www.medicines.org.uk/emc/search?q=ciprofloxacin+ear" target="_blank" rel="noopener" class="evlink evlink-emc" title="Search ciprofloxacin ear SPC">eMC ↗</a><a href="https://pubmed.ncbi.nlm.nih.gov/20010446/" target="_blank" rel="noopener" class="evlink evlink-pubmed" title="TM healing + dexamethasone evidence">PubMed ↗</a><a href="https://www.nhsinform.scot/illnesses-and-conditions/ears-nose-and-throat" target="_blank" rel="noopener" class="evlink evlink-cks" title="NHS Inform — ENT conditions (Scotland)">NHS Inform ↗</a><a href="https://www.cps.scot/pharmacy-first-scotland-plus" target="_blank" rel="noopener" class="evlink evlink-nice" title="Community Pharmacy Scotland — Pharmacy First Plus">CPS PFP+ ↗</a></div></div></div></div><div class="sys-card" id="sc-psych"><div class="sys-top"><div class="sys-name">Mental health</div><span id="fp-psych" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-psych">Tap to assess</div><div class="sys-detail" id="det-psych"><p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row"><button class="cpill" data-key="psych" data-type="sym" data-idx="0">Low mood + anhedonia</button><button class="cpill" data-key="psych" data-type="sym" data-idx="1">Suicidal/self-harm thoughts</button><button class="cpill" data-key="psych" data-type="sym" data-idx="2">Hallucinations/delusions</button><button class="cpill" data-key="psych" data-type="sym" data-idx="3">Elevated mood/reduced sleep</button><button class="cpill" data-key="psych" data-type="sym" data-idx="4">Severe anxiety</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="psych" data-type="flag" data-idx="0">Active suicidal ideation with plan</button><button class="cpill" data-key="psych" data-type="flag" data-idx="1">Acute psychosis with risk to self/others</button><button class="cpill" data-key="psych" data-type="flag" data-idx="2">Features of serotonin syndrome</button><button class="cpill" data-key="psych" data-type="flag" data-idx="3">Features of NMS</button></div><div id="fd-psych"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-psych" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG90. NICE NG225. PHQ-9. Crisis: Samaritans 116 123.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/depression/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Depression in adults">CKS Depression ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/antidepressant-drugs/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Antidepressants">BNF ↗</a></div></div></div></div></div>
+  <div class="sys-grid" id="sysGrid"><div class="sys-card" id="sc-constitutional"><div class="sys-top"><div class="sys-name">Constitutional</div><span id="fp-constitutional" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-constitutional">Tap to assess</div><div class="sys-detail" id="det-constitutional"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="constitutional" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Fever / rigors</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Night sweats</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Unintentional weight loss</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Fatigue / lethargy</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Pallor</button><button class="cpill" data-key="constitutional" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Anorexia</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="constitutional" data-type="flag" data-idx="0">B-symptoms: fever + night sweats + weight loss</button><button class="cpill" data-key="constitutional" data-type="flag" data-idx="1">Unintentional weight loss &gt;5% in 6 months</button><button class="cpill" data-key="constitutional" data-type="flag" data-idx="2">Pallor + fatigue + bruising</button></div><div id="fd-constitutional"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-constitutional" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-constitutional"><button onclick="prePopulateFreeText('constitutional','Fever / rigors')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Fever / rigors">✎ Fever / rigors</button><button onclick="prePopulateFreeText('constitutional','Night sweats')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Night sweats">✎ Night sweats</button><button onclick="prePopulateFreeText('constitutional','Unintentional weight loss')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Unintentional weight loss">✎ Unintentional weight loss</button><button onclick="prePopulateFreeText('constitutional','Fatigue / lethargy')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Fatigue / lethargy">✎ Fatigue / lethargy</button><button onclick="prePopulateFreeText('constitutional','Pallor')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Pallor">✎ Pallor</button><button onclick="prePopulateFreeText('constitutional','Anorexia')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Anorexia">✎ Anorexia</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12 (2023). B-symptoms → urgent haematology.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng12" target="_blank" rel="noopener" class="evlink evlink-nice" title="Suspected cancer referral">NICE NG12 ↗</a><a href="https://cks.nice.org.uk/topics/weight-loss-unintentional/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Weight loss — unintentional">CKS ↗</a></div></div></div></div><div class="sys-card" id="sc-cardio"><div class="sys-top"><div class="sys-name">Cardiovascular</div><span id="fp-cardio" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-cardio">Tap to assess</div><div class="sys-detail" id="det-cardio"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="cardio" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Chest pain</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Palpitations</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Dyspnoea at rest</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Orthopnoea</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Ankle oedema</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Unwarned syncope</button><button class="cpill" data-key="cardio" data-type="sym" data-idx="6" title="Click to log symptom; double-click to also pre-fill text findings">Exertional breathlessness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="cardio" data-type="flag" data-idx="0">Crushing chest pain ± arm/jaw radiation</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="1">Acute tearing chest/back pain</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="2">Unwarned syncope</button><button class="cpill" data-key="cardio" data-type="flag" data-idx="3">SpO2 &lt;94% + breathlessness</button></div><div id="fd-cardio"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-cardio" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-cardio"><button onclick="prePopulateFreeText('cardio','Chest pain')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Chest pain">✎ Chest pain</button><button onclick="prePopulateFreeText('cardio','Palpitations')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Palpitations">✎ Palpitations</button><button onclick="prePopulateFreeText('cardio','Dyspnoea at rest')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Dyspnoea at rest">✎ Dyspnoea at rest</button><button onclick="prePopulateFreeText('cardio','Orthopnoea')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Orthopnoea">✎ Orthopnoea</button><button onclick="prePopulateFreeText('cardio','Ankle oedema')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Ankle oedema">✎ Ankle oedema</button><button onclick="prePopulateFreeText('cardio','Unwarned syncope')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Unwarned syncope">✎ Unwarned syncope</button><button onclick="prePopulateFreeText('cardio','Exertional breathlessness')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Exertional breathlessness">✎ Exertional breathlessness</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG167. NICE CG108. NICE NG136. NEWS2.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/cg167" target="_blank" rel="noopener" class="evlink evlink-nice" title="ACS chest pain">NICE CG167 ↗</a><a href="https://cks.nice.org.uk/topics/chest-pain/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Chest pain">CKS Chest pain ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/cardiovascular-disease-risk/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Cardiovascular drugs">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-resp"><div class="sys-top"><div class="sys-name">Respiratory</div><span id="fp-resp" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-resp">Tap to assess</div><div class="sys-detail" id="det-resp"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="resp" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Cough &gt;3 weeks</button><button class="cpill" data-key="resp" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Haemoptysis</button><button class="cpill" data-key="resp" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Dyspnoea</button><button class="cpill" data-key="resp" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Wheeze</button><button class="cpill" data-key="resp" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Pleuritic chest pain</button><button class="cpill" data-key="resp" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Stridor</button><button class="cpill" data-key="resp" data-type="sym" data-idx="6" title="Click to log symptom; double-click to also pre-fill text findings">Purulent sputum</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="resp" data-type="flag" data-idx="0">Haemoptysis in anyone &gt;40yrs</button><button class="cpill" data-key="resp" data-type="flag" data-idx="1">Stridor</button><button class="cpill" data-key="resp" data-type="flag" data-idx="2">SpO2 &lt;94% at rest</button><button class="cpill" data-key="resp" data-type="flag" data-idx="3">Sudden pleuritic pain + breathlessness</button></div><div id="fd-resp"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-resp" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-resp"><button onclick="prePopulateFreeText('resp','Cough &gt;3 weeks')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Cough &gt;3 weeks">✎ Cough &gt;3 weeks</button><button onclick="prePopulateFreeText('resp','Haemoptysis')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Haemoptysis">✎ Haemoptysis</button><button onclick="prePopulateFreeText('resp','Dyspnoea')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Dyspnoea">✎ Dyspnoea</button><button onclick="prePopulateFreeText('resp','Wheeze')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Wheeze">✎ Wheeze</button><button onclick="prePopulateFreeText('resp','Pleuritic chest pain')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Pleuritic chest pain">✎ Pleuritic chest pain</button><button onclick="prePopulateFreeText('resp','Stridor')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Stridor">✎ Stridor</button><button onclick="prePopulateFreeText('resp','Purulent sputum')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Purulent sputum">✎ Purulent sputum</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. BTS/SIGN asthma 2023. GOLD COPD 2024.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/asthma/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Asthma in adults">CKS Asthma ↗</a><a href="https://cks.nice.org.uk/topics/chronic-obstructive-pulmonary-disease/" target="_blank" rel="noopener" class="evlink evlink-cks" title="COPD">CKS COPD ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/asthma-chronic/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Respiratory prescribing">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-gi"><div class="sys-top"><div class="sys-name">Gastrointestinal</div><span id="fp-gi" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-gi">Tap to assess</div><div class="sys-detail" id="det-gi"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="gi" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Dysphagia</button><button class="cpill" data-key="gi" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Haematemesis/melaena</button><button class="cpill" data-key="gi" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Rectal bleeding</button><button class="cpill" data-key="gi" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Bowel habit change</button><button class="cpill" data-key="gi" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Abdominal pain</button><button class="cpill" data-key="gi" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Abdominal mass</button><button class="cpill" data-key="gi" data-type="sym" data-idx="6" title="Click to log symptom; double-click to also pre-fill text findings">Jaundice</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="gi" data-type="flag" data-idx="0">Progressive dysphagia</button><button class="cpill" data-key="gi" data-type="flag" data-idx="1">Haematemesis or melaena</button><button class="cpill" data-key="gi" data-type="flag" data-idx="2">Rectal bleeding ≥50yrs</button><button class="cpill" data-key="gi" data-type="flag" data-idx="3">New onset jaundice</button><button class="cpill" data-key="gi" data-type="flag" data-idx="4">Abdominal mass</button></div><div id="fd-gi"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-gi" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-gi"><button onclick="prePopulateFreeText('gi','Dysphagia')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Dysphagia">✎ Dysphagia</button><button onclick="prePopulateFreeText('gi','Haematemesis/melaena')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Haematemesis/melaena">✎ Haematemesis/melaena</button><button onclick="prePopulateFreeText('gi','Rectal bleeding')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Rectal bleeding">✎ Rectal bleeding</button><button onclick="prePopulateFreeText('gi','Bowel habit change')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Bowel habit change">✎ Bowel habit change</button><button onclick="prePopulateFreeText('gi','Abdominal pain')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Abdominal pain">✎ Abdominal pain</button><button onclick="prePopulateFreeText('gi','Abdominal mass')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Abdominal mass">✎ Abdominal mass</button><button onclick="prePopulateFreeText('gi','Jaundice')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Jaundice">✎ Jaundice</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE CG141. BSG rectal bleeding.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/dyspepsia-proven-gord/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Dyspepsia">CKS Dyspepsia ↗</a><a href="https://cks.nice.org.uk/topics/irritable-bowel-syndrome/" target="_blank" rel="noopener" class="evlink evlink-cks" title="IBS">CKS IBS ↗</a></div></div></div></div><div class="sys-card" id="sc-gu"><div class="sys-top"><div class="sys-name">Genitourinary</div><span id="fp-gu" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-gu">Tap to assess</div><div class="sys-detail" id="det-gu"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="gu" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Visible haematuria</button><button class="cpill" data-key="gu" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Dysuria/frequency</button><button class="cpill" data-key="gu" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Urinary hesitancy</button><button class="cpill" data-key="gu" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Post-menopausal bleeding</button><button class="cpill" data-key="gu" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Testicular lump</button><button class="cpill" data-key="gu" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Pelvic pain</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="gu" data-type="flag" data-idx="0">Visible haematuria</button><button class="cpill" data-key="gu" data-type="flag" data-idx="1">Post-menopausal bleeding ≥55yrs</button><button class="cpill" data-key="gu" data-type="flag" data-idx="2">New testicular mass</button></div><div id="fd-gu"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-gu" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-gu"><button onclick="prePopulateFreeText('gu','Visible haematuria')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Visible haematuria">✎ Visible haematuria</button><button onclick="prePopulateFreeText('gu','Dysuria/frequency')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Dysuria/frequency">✎ Dysuria/frequency</button><button onclick="prePopulateFreeText('gu','Urinary hesitancy')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Urinary hesitancy">✎ Urinary hesitancy</button><button onclick="prePopulateFreeText('gu','Post-menopausal bleeding')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Post-menopausal bleeding">✎ Post-menopausal bleeding</button><button onclick="prePopulateFreeText('gu','Testicular lump')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Testicular lump">✎ Testicular lump</button><button onclick="prePopulateFreeText('gu','Pelvic pain')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Pelvic pain">✎ Pelvic pain</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE NG109. Pharmacy First UTI.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/urinary-tract-infection-lower-women/" target="_blank" rel="noopener" class="evlink evlink-cks" title="UTI (lower) — women">CKS UTI ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/urinary-tract-infections/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="UTI prescribing">BNF ↗</a></div></div></div></div><div class="sys-card" id="sc-neuro"><div class="sys-top"><div class="sys-name">Neurological</div><span id="fp-neuro" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-neuro">Tap to assess</div><div class="sys-detail" id="det-neuro"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="neuro" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Thunderclap headache</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Focal weakness</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Sensory disturbance</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Acute visual change</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">New seizure</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Progressive limb weakness</button><button class="cpill" data-key="neuro" data-type="sym" data-idx="6" title="Click to log symptom; double-click to also pre-fill text findings">Confusion</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="neuro" data-type="flag" data-idx="0">Thunderclap headache — worst ever</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="1">FAST positive — acute focal deficit</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="2">New seizure in adult</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="3">Bladder/bowel + limb weakness</button><button class="cpill" data-key="neuro" data-type="flag" data-idx="4">Headache + fever + neck stiffness</button></div><div id="fd-neuro"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-neuro" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-neuro"><button onclick="prePopulateFreeText('neuro','Thunderclap headache')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Thunderclap headache">✎ Thunderclap headache</button><button onclick="prePopulateFreeText('neuro','Focal weakness')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Focal weakness">✎ Focal weakness</button><button onclick="prePopulateFreeText('neuro','Sensory disturbance')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Sensory disturbance">✎ Sensory disturbance</button><button onclick="prePopulateFreeText('neuro','Acute visual change')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Acute visual change">✎ Acute visual change</button><button onclick="prePopulateFreeText('neuro','New seizure')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: New seizure">✎ New seizure</button><button onclick="prePopulateFreeText('neuro','Progressive limb weakness')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Progressive limb weakness">✎ Progressive limb weakness</button><button onclick="prePopulateFreeText('neuro','Confusion')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Confusion">✎ Confusion</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG176. NICE NG217. NICE NG150.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/cg176" target="_blank" rel="noopener" class="evlink evlink-nice" title="Stroke and TIA">NICE CG176 ↗</a><a href="https://cks.nice.org.uk/topics/headache-assessment/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Headache assessment">CKS Headache ↗</a></div></div></div></div><div class="sys-card" id="sc-msk"><div class="sys-top"><div class="sys-name">Musculoskeletal</div><span id="fp-msk" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-msk">Tap to assess</div><div class="sys-detail" id="det-msk"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="msk" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Acute joint swelling+warmth</button><button class="cpill" data-key="msk" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Morning stiffness &gt;1hr</button><button class="cpill" data-key="msk" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Radicular back pain</button><button class="cpill" data-key="msk" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Bone pain at night</button><button class="cpill" data-key="msk" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Hot swollen single joint</button><button class="cpill" data-key="msk" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Progressive weakness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="msk" data-type="flag" data-idx="0">Back pain + bladder/bowel dysfunction</button><button class="cpill" data-key="msk" data-type="flag" data-idx="1">Hot single joint + fever</button><button class="cpill" data-key="msk" data-type="flag" data-idx="2">Back pain + known malignancy</button><button class="cpill" data-key="msk" data-type="flag" data-idx="3">Bone pain + weight loss + age &gt;50</button></div><div id="fd-msk"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-msk" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-msk"><button onclick="prePopulateFreeText('msk','Acute joint swelling+warmth')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Acute joint swelling+warmth">✎ Acute joint swelling+warmth</button><button onclick="prePopulateFreeText('msk','Morning stiffness &gt;1hr')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Morning stiffness &gt;1hr">✎ Morning stiffness &gt;1hr</button><button onclick="prePopulateFreeText('msk','Radicular back pain')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Radicular back pain">✎ Radicular back pain</button><button onclick="prePopulateFreeText('msk','Bone pain at night')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Bone pain at night">✎ Bone pain at night</button><button onclick="prePopulateFreeText('msk','Hot swollen single joint')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Hot swollen single joint">✎ Hot swollen single joint</button><button onclick="prePopulateFreeText('msk','Progressive weakness')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Progressive weakness">✎ Progressive weakness</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG59. NICE NG100. NICE NG226.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/back-pain-low-without-radiculopathy/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Low back pain">CKS Back pain ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/non-steroidal-anti-inflammatory-drugs/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="NSAIDs">BNF NSAIDs ↗</a></div></div></div></div><div class="sys-card" id="sc-derm"><div class="sys-top"><div class="sys-name">Dermatological</div><span id="fp-derm" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-derm">Tap to assess</div><div class="sys-detail" id="det-derm"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="derm" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Changing mole (ABCDE)</button><button class="cpill" data-key="derm" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Non-blanching rash</button><button class="cpill" data-key="derm" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Spreading cellulitis</button><button class="cpill" data-key="derm" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">New lesion &gt;6mm</button><button class="cpill" data-key="derm" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Blistering rash</button><button class="cpill" data-key="derm" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Itch + jaundice</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="derm" data-type="flag" data-idx="0">Purpuric non-blanching rash + systemic illness</button><button class="cpill" data-key="derm" data-type="flag" data-idx="1">ABCDE change in pigmented lesion</button><button class="cpill" data-key="derm" data-type="flag" data-idx="2">Widespread blistering (TEN/SJS)</button><button class="cpill" data-key="derm" data-type="flag" data-idx="3">Spreading cellulitis + systemic fever</button></div><div id="fd-derm"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-derm" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-derm"><button onclick="prePopulateFreeText('derm','Changing mole (ABCDE)')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Changing mole (ABCDE)">✎ Changing mole (ABCDE)</button><button onclick="prePopulateFreeText('derm','Non-blanching rash')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Non-blanching rash">✎ Non-blanching rash</button><button onclick="prePopulateFreeText('derm','Spreading cellulitis')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Spreading cellulitis">✎ Spreading cellulitis</button><button onclick="prePopulateFreeText('derm','New lesion &gt;6mm')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: New lesion &gt;6mm">✎ New lesion &gt;6mm</button><button onclick="prePopulateFreeText('derm','Blistering rash')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Blistering rash">✎ Blistering rash</button><button onclick="prePopulateFreeText('derm','Itch + jaundice')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Itch + jaundice">✎ Itch + jaundice</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE CG129. BAD cellulitis guideline.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/eczema-atopic/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Eczema — atopic">CKS Eczema ↗</a><a href="https://cks.nice.org.uk/topics/cellulitis-acute/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Cellulitis">CKS Cellulitis ↗</a></div></div></div></div><div class="sys-card" id="sc-haem"><div class="sys-top"><div class="sys-name">Haematological</div><span id="fp-haem" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-haem">Tap to assess</div><div class="sys-detail" id="det-haem"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="haem" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Easy bruising</button><button class="cpill" data-key="haem" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Petechiae/purpura</button><button class="cpill" data-key="haem" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Lymphadenopathy</button><button class="cpill" data-key="haem" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Pallor+fatigue</button><button class="cpill" data-key="haem" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Recurrent infections</button><button class="cpill" data-key="haem" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Splenomegaly</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="haem" data-type="flag" data-idx="0">Petechiae + fever + systemic illness</button><button class="cpill" data-key="haem" data-type="flag" data-idx="1">Lymphadenopathy &gt;3 weeks</button><button class="cpill" data-key="haem" data-type="flag" data-idx="2">Severe pallor + haemodynamic compromise</button></div><div id="fd-haem"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-haem" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-haem"><button onclick="prePopulateFreeText('haem','Easy bruising')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Easy bruising">✎ Easy bruising</button><button onclick="prePopulateFreeText('haem','Petechiae/purpura')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Petechiae/purpura">✎ Petechiae/purpura</button><button onclick="prePopulateFreeText('haem','Lymphadenopathy')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Lymphadenopathy">✎ Lymphadenopathy</button><button onclick="prePopulateFreeText('haem','Pallor+fatigue')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Pallor+fatigue">✎ Pallor+fatigue</button><button onclick="prePopulateFreeText('haem','Recurrent infections')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Recurrent infections">✎ Recurrent infections</button><button onclick="prePopulateFreeText('haem','Splenomegaly')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Splenomegaly">✎ Splenomegaly</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12. NICE NG8. FBC + film first-line.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng12" target="_blank" rel="noopener" class="evlink evlink-nice" title="Suspected blood cancer">NICE NG8 ↗</a><a href="https://cks.nice.org.uk/topics/anaemia-iron-deficiency/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Anaemia — iron deficiency">CKS Anaemia ↗</a></div></div></div></div><div class="sys-card" id="sc-endo"><div class="sys-top"><div class="sys-name">Endocrine</div><span id="fp-endo" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-endo">Tap to assess</div><div class="sys-detail" id="det-endo"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="endo" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Polyuria + polydipsia</button><button class="cpill" data-key="endo" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Unexplained weight change</button><button class="cpill" data-key="endo" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Heat/cold intolerance</button><button class="cpill" data-key="endo" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Tremor + palpitations</button><button class="cpill" data-key="endo" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Proximal weakness</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="endo" data-type="flag" data-idx="0">Polyuria + polydipsia + weight loss (young patient)</button><button class="cpill" data-key="endo" data-type="flag" data-idx="1">Drowsy diabetic patient</button><button class="cpill" data-key="endo" data-type="flag" data-idx="2">Suspected adrenal crisis</button></div><div id="fd-endo"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-endo" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-endo"><button onclick="prePopulateFreeText('endo','Polyuria + polydipsia')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Polyuria + polydipsia">✎ Polyuria + polydipsia</button><button onclick="prePopulateFreeText('endo','Unexplained weight change')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Unexplained weight change">✎ Unexplained weight change</button><button onclick="prePopulateFreeText('endo','Heat/cold intolerance')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Heat/cold intolerance">✎ Heat/cold intolerance</button><button onclick="prePopulateFreeText('endo','Tremor + palpitations')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Tremor + palpitations">✎ Tremor + palpitations</button><button onclick="prePopulateFreeText('endo','Proximal weakness')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Proximal weakness">✎ Proximal weakness</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG17. NICE NG28. NICE NG145. Sick day rules.<div class="evidence-links" style="margin-top:5px"><a href="https://www.nice.org.uk/guidance/ng28" target="_blank" rel="noopener" class="evlink evlink-nice" title="Type 2 diabetes">NICE NG28 ↗</a><a href="https://cks.nice.org.uk/topics/diabetes-type-2/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Diabetes — type 2">CKS Diabetes ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/diabetes/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Diabetes prescribing">BNF ↗</a></div></div></div></div><div class="sys-card expanded" id="sc-ent"><div class="sys-top"><div class="sys-name">ENT / Eyes</div><span id="fp-ent" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-ent">Tap to assess</div><div class="sys-detail open" id="det-ent"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="ent" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Sudden visual loss</button><button class="cpill" data-key="ent" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Painful red eye + photophobia</button><button class="cpill" data-key="ent" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Severe eye pain + halos</button><button class="cpill" data-key="ent" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Hoarseness &gt;3 weeks</button><button class="cpill" data-key="ent" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Head/neck mass &gt;3 weeks</button><button class="cpill" data-key="ent" data-type="sym" data-idx="5" title="Click to log symptom; double-click to also pre-fill text findings">Unilateral SNHL + tinnitus</button><button class="cpill sel-sym" data-key="ent" data-type="sym" data-idx="6" title="Click to log symptom; double-click to also pre-fill text findings">Otalgia + discharge</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="ent" data-type="flag" data-idx="0">Sudden painless visual loss</button><button class="cpill" data-key="ent" data-type="flag" data-idx="1">Acute angle closure glaucoma features</button><button class="cpill" data-key="ent" data-type="flag" data-idx="2">Hoarseness &gt;3 weeks + age &gt;45yrs</button><button class="cpill" data-key="ent" data-type="flag" data-idx="3">Head/neck mass &gt;3 weeks</button></div><div id="fd-ent"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-ent" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-ent"><button onclick="prePopulateFreeText('ent','Sudden visual loss')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Sudden visual loss">✎ Sudden visual loss</button><button onclick="prePopulateFreeText('ent','Painful red eye + photophobia')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Painful red eye + photophobia">✎ Painful red eye + photophobia</button><button onclick="prePopulateFreeText('ent','Severe eye pain + halos')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Severe eye pain + halos">✎ Severe eye pain + halos</button><button onclick="prePopulateFreeText('ent','Hoarseness &gt;3 weeks')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Hoarseness &gt;3 weeks">✎ Hoarseness &gt;3 weeks</button><button onclick="prePopulateFreeText('ent','Head/neck mass &gt;3 weeks')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Head/neck mass &gt;3 weeks">✎ Head/neck mass &gt;3 weeks</button><button onclick="prePopulateFreeText('ent','Unilateral SNHL + tinnitus')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Unilateral SNHL + tinnitus">✎ Unilateral SNHL + tinnitus</button><button onclick="prePopulateFreeText('ent','Otalgia + discharge')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Otalgia + discharge">✎ Otalgia + discharge</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE NG12 (England/Wales). NICE CKS otitis externa (May 2024). Scotland: NHS Inform ENT guidance; CPS/NES Pharmacy First Plus scope includes otitis externa, allergic rhinitis. IMPORTANT: Aminoglycosides CONTRAINDICATED with perforated TM — ototoxicity. Ciprofloxacin/dexamethasone drops are the non-ototoxic option. Note: dexamethasone may delay TM healing (PubMed PMID 20010446).<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/otitis-externa/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Otitis externa (May 2024)">CKS Otitis externa ↗</a><a href="https://cks.nice.org.uk/topics/otitis-media-acute/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Otitis media — acute">CKS AOM ↗</a><a href="https://bnf.nice.org.uk/drugs/ciprofloxacin/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Ear preparations">BNF Ear ↗</a><a href="https://www.medicines.org.uk/emc/search?q=ciprofloxacin+ear" target="_blank" rel="noopener" class="evlink evlink-emc" title="Search ciprofloxacin ear SPC">eMC ↗</a><a href="https://pubmed.ncbi.nlm.nih.gov/20010446/" target="_blank" rel="noopener" class="evlink evlink-pubmed" title="TM healing + dexamethasone evidence">PubMed ↗</a><a href="https://www.nhsinform.scot/illnesses-and-conditions/ears-nose-and-throat" target="_blank" rel="noopener" class="evlink evlink-cks" title="NHS Inform — ENT conditions (Scotland)">NHS Inform ↗</a><a href="https://www.cps.scot/pharmacy-first-scotland-plus" target="_blank" rel="noopener" class="evlink evlink-nice" title="Community Pharmacy Scotland — Pharmacy First Plus">CPS PFP+ ↗</a></div></div></div></div><div class="sys-card" id="sc-psych"><div class="sys-top"><div class="sys-name">Mental health</div><span id="fp-psych" style="display:none" class="pill pill-danger">0</span></div><div class="sys-sub" id="ss-psych">Tap to assess</div><div class="sys-detail" id="det-psych"><p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row"><button class="cpill" data-key="psych" data-type="sym" data-idx="0" title="Click to log symptom; double-click to also pre-fill text findings">Low mood + anhedonia</button><button class="cpill" data-key="psych" data-type="sym" data-idx="1" title="Click to log symptom; double-click to also pre-fill text findings">Suicidal/self-harm thoughts</button><button class="cpill" data-key="psych" data-type="sym" data-idx="2" title="Click to log symptom; double-click to also pre-fill text findings">Hallucinations/delusions</button><button class="cpill" data-key="psych" data-type="sym" data-idx="3" title="Click to log symptom; double-click to also pre-fill text findings">Elevated mood/reduced sleep</button><button class="cpill" data-key="psych" data-type="sym" data-idx="4" title="Click to log symptom; double-click to also pre-fill text findings">Severe anxiety</button></div><p class="slabel">Red flags present</p><div class="checks-row"><button class="cpill" data-key="psych" data-type="flag" data-idx="0">Active suicidal ideation with plan</button><button class="cpill" data-key="psych" data-type="flag" data-idx="1">Acute psychosis with risk to self/others</button><button class="cpill" data-key="psych" data-type="flag" data-idx="2">Features of serotonin syndrome</button><button class="cpill" data-key="psych" data-type="flag" data-idx="3">Features of NMS</button></div><div id="fd-psych"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-psych" placeholder="Type findings here, or click a symptom above to suggest text automatically...
+e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-psych"><button onclick="prePopulateFreeText('psych','Low mood + anhedonia')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Low mood + anhedonia">✎ Low mood + anhedonia</button><button onclick="prePopulateFreeText('psych','Suicidal/self-harm thoughts')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Suicidal/self-harm thoughts">✎ Suicidal/self-harm thoughts</button><button onclick="prePopulateFreeText('psych','Hallucinations/delusions')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Hallucinations/delusions">✎ Hallucinations/delusions</button><button onclick="prePopulateFreeText('psych','Elevated mood/reduced sleep')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Elevated mood/reduced sleep">✎ Elevated mood/reduced sleep</button><button onclick="prePopulateFreeText('psych','Severe anxiety')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: Severe anxiety">✎ Severe anxiety</button></div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> NICE CG90. NICE NG225. PHQ-9. Crisis: Samaritans 116 123.<div class="evidence-links" style="margin-top:5px"><a href="https://cks.nice.org.uk/topics/depression/" target="_blank" rel="noopener" class="evlink evlink-cks" title="Depression in adults">CKS Depression ↗</a><a href="https://bnf.nice.org.uk/treatment-summaries/antidepressant-drugs/" target="_blank" rel="noopener" class="evlink evlink-bnf" title="Antidepressants">BNF ↗</a></div></div></div></div></div>
   <div id="flagSummaryBox"></div>
 </div>
 <div class="nav-row no-print"><button class="btn" onclick="goStep(1)">← Back</button><button class="btn btn-primary" onclick="goStep(3)">Next: GP / referral →</button></div>
@@ -250,21 +318,26 @@ Expectations: what do they hope you can do today?"></textarea></div></div>
 <div id="step3" class="step-panel">
 <div class="card">
   <h2>GP practice &amp; referral contacts</h2>
-  <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Enter and save contacts. Tap a saved contact to select it for the SBAR. Contacts persist for the session.</p>
-  <h3>Add contact</h3>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:10px">GP surgery details are entered and searched on the <strong>Patient tab</strong> (with live NHS ODS lookup). Save additional contacts here for quick SBAR selection.</p>
+  <!-- Read-only summary of GP from patient tab -->
+  <div id="gpSummaryBox" style="background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--info-text)">
+    <strong>🏠 Current GP:</strong> <span id="gpSummaryText">Maryhill Health Centre | 41 Shawpark Street, Glasgow, G20 9DR | 0141 531 8300</span>
+  </div>
+  <h3 style="margin-bottom:6px">Save additional contacts (OOH, consultants, referral targets)</h3>
+  <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Add other contacts you may need for this consultation — out of hours, secondary care, NHS 24 etc.</p>
   <div class="g2">
-    <div><label>Practice / hospital / service name</label><input id="gpName" type="text" placeholder="e.g. Southgate Medical Centre"></div>
-    <div><label>Contact type</label><select id="gpType"><option value="GP">GP practice</option><option value="Secondary">Secondary care / consultant</option><option value="OOH">Out of hours</option><option value="CMHT">CMHT / crisis team</option><option value="Other">Other</option></select></div>
+    <div><label>Name / service</label><input id="gpNameExtra" type="text" placeholder="e.g. NHS 24, Royal Infirmary ENT, OOH service"></div>
+    <div><label>Contact type</label><select id="gpType"><option value="GP">GP practice</option><option value="Secondary">Secondary care / consultant</option><option value="OOH">Out of hours (NHS 24 / 111)</option><option value="CMHT">CMHT / crisis team</option><option value="Other">Other</option></select></div>
   </div>
   <div class="g2">
-    <div><label>Address</label><input id="gpAddr" type="text" placeholder="e.g. 22 The Bourne, Southgate, London N14 6RA"></div>
-    <div><label>Phone</label><input id="gpPhone" type="text" placeholder="e.g. 020 8882 1100"></div>
+    <div><label>Address</label><input id="gpAddrExtra" type="text" placeholder="e.g. EH16 4SA"></div>
+    <div><label>Phone</label><input id="gpPhoneExtra" type="text" placeholder="e.g. 111 / 999 / 0131 000 0000"></div>
   </div>
   <div class="g2">
-    <div><label>Fax</label><input id="gpFax" type="text" placeholder="e.g. 020 8882 1101"></div>
-    <div><label>Secure email (NHS Mail)</label><input id="gpEmail" type="text" placeholder="e.g. practice@nhs.net"></div>
+    <div><label>Fax</label><input id="gpFaxExtra" type="text" placeholder="e.g. 0131 000 0001"></div>
+    <div><label>Secure email / SCI Gateway</label><input id="gpEmailExtra" type="text" placeholder="e.g. practice@nhs.net"></div>
   </div>
-  <div class="g1"><div><label>Referral route / notes</label><input id="gpNotes" type="text" placeholder="e.g. Phone triage 9am-1pm | refer via ICE | duty doctor ext 200"></div></div>
+  <div class="g1"><div><label>Referral route / notes</label><input id="gpNotes" type="text" placeholder="e.g. Phone triage 9am–1pm | refer via SCI Gateway | duty doctor ext 200"></div></div>
   <div style="display:flex;gap:7px;margin-top:7px">
     <button class="btn btn-primary" onclick="saveContact()">✓ Save contact</button>
     <button class="btn" onclick="clearGPForm()">Clear form</button>
@@ -273,12 +346,6 @@ Expectations: what do they hope you can do today?"></textarea></div></div>
     <div class="divider"></div>
     <h3>Saved contacts — tap to select for SBAR</h3>
     <div id="savedContactsList"></div>
-  </div>
-  <div class="divider"></div>
-  <h3>Consultant / secondary care (this referral)</h3>
-  <div class="g2">
-    <div><label>Consultant name &amp; specialty</label><input id="consultantName" type="text" placeholder="e.g. Dr A Smith, ENT, Royal Free"></div>
-    <div><label>Hospital</label><input id="consultantHospital" type="text" placeholder="e.g. Royal Free Hospital, London"></div>
   </div>
 </div>
 <div class="nav-row no-print"><button class="btn" onclick="goStep(2)">← Back</button><button class="btn btn-primary" onclick="goStep(4)">Next: prescription →</button></div>
@@ -334,13 +401,13 @@ Expectations: what do they hope you can do today?"></textarea></div></div>
         </select>
       </div>
     </div>
-    <div id="formularyResults" style="margin-top:8px;max-height:260px;overflow-y:auto;display:none;border:0.5px solid var(--success-border);border-radius:var(--radius);background:var(--bg)">
-      <div id="formularyList"></div>
+    <div id="formularyResults" style="margin-top: 8px; max-height: 260px; overflow-y: auto; display: none; border: 0.5px solid var(--success-border); border-radius: var(--radius); background: var(--bg);">
+      <div id="formularyList"><div style="padding: 9px 12px; border-bottom: 0.5px solid var(--border); cursor: pointer;" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''" onclick="selectDrug(0)"><div style="font-size:12px;font-weight:700;color:var(--success-text)">Doxycycline 100mg capsules</div><div style="font-size:11px;color:var(--text3);margin-top:1px">Infections / Antimicrobials &nbsp;·&nbsp; 200mg stat then 100mg &nbsp;·&nbsp; Chest infection, COPD exacerbation, Lyme disease, chlamydia</div></div></div>
     </div>
   </div>
 
   <div class="g2">
-    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops"></div>
+    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops" style=""></div>
     <div><label>Indication</label><input id="rxIndication" type="text" placeholder="e.g. Otitis externa with perforated tympanic membrane"></div>
   </div>
   <div class="g4">
@@ -385,13 +452,13 @@ Expectations: what do they hope you can do today?"></textarea></div></div>
     </select></div>
   </div>
   <div class="g1"><div><label>Counselling given to patient</label><textarea id="rxCounsel" placeholder="e.g. Warm drops in hands before instilling. Keep ear dry. Return if no improvement in 48 hours. PIL supplied."></textarea></div></div>
-  <div class="g1" id="manualDirRow" style="display: none;"><div>
+  <div class="g1" id="manualDirRow" style="display: block;"><div>
     <label style="color:var(--warning-text);font-weight:700">✎ Manual directions override <span style="font-weight:400;font-size:11px">(replaces auto-generated directions on prescription label)</span></label>
     <textarea id="rxManualDirections" placeholder="e.g. Apply to affected area twice daily for 7 days. Do not use on face. For external use only.
 Or: One spray to right ear(s) three times a day for 7 days. Do not use if eardrum is perforated." style="border-color:var(--warning-border);background:var(--warning-bg);min-height:60px"></textarea>
   </div></div>
   <div style="margin-bottom:9px">
-    <button class="btn" id="manualDirBtn" onclick="toggleManualDir()" style="font-size:11px;background:var(--warning-bg);color:var(--warning-text);border-color:var(--warning-border)">✎ Override prescription directions manually</button>
+    <button class="btn" id="manualDirBtn" onclick="toggleManualDir()" style="font-size:11px;background:var(--warning-bg);color:var(--warning-text);border-color:var(--warning-border)">✕ Remove manual directions override</button>
     <span style="font-size:11px;color:var(--text3);margin-left:8px">Use when auto-filled directions need to be changed or when a non-standard instruction is required</span>
   </div>
   <div class="g1"><div><label>Drug interactions checked / monitoring required</label><textarea id="rxInteractions" placeholder="e.g. No significant interactions identified (BNF interactions checker). No monitoring required for this course." style="min-height:52px"></textarea></div></div>
@@ -412,17 +479,17 @@ Or: One spray to right ear(s) three times a day for 7 days. Do not use if eardru
     <button class="ubtn" id="urg999" onclick="setUrgency('999')"><span class="ui">🚑</span>999 / A&amp;E<span class="us">Immediate</span></button>
     <button class="ubtn" id="urgUrgent" onclick="setUrgency('urgent')"><span class="ui">⚠</span>Urgent GP<span class="us">Same day / 2WW</span></button>
     <button class="ubtn" id="urgRoutine" onclick="setUrgency('routine')"><span class="ui">📅</span>Routine GP<span class="us">Follow-up</span></button>
-    <button class="ubtn" id="urgSelf" onclick="setUrgency('selfcare')"><span class="ui">🌿</span>Self-care / Rx<span class="us">+ SBAR (required)</span></button>
+    <button class="ubtn sel-self" id="urgSelf" onclick="setUrgency('selfcare')"><span class="ui">🌿</span>Self-care / Rx<span class="us">+ SBAR (required)</span></button>
   </div>
-  <div id="scotlandPFPBanner" style="display:none" class="alert-info">
+  <div id="scotlandPFPBanner" style="display: block;" class="alert-info">
     <strong>🏴 NHS Scotland — Pharmacy First Plus:</strong> Prescriptions under PFP+ must be written on your NHS Board-issued GP10 pad. Submit a UCF Supply claim via PharmOutcomes / your claim system. SBAR required for GP practice records. Claim code: <strong>NHS Pharmacy First Plus Supply</strong>. Activity pot payment applies from November 2025 (PCA(P)(2025)24).
   </div>
 </div>
-<div id="selfcarePanel" style="display:none">
+<div id="selfcarePanel" style="display: block;">
   <div class="card">
     <h2>Self-care &amp; safety-netting</h2>
     <div class="slabel">Suggested self-care (based on systems assessed)</div>
-    <div id="selfcareContent"></div>
+    <div id="selfcareContent"><div class="alert-success">🌿 Maintain adequate nutrition and hydration</div><div class="alert-success">🌿 Low-salt diet (&lt;6g/day)</div><div class="alert-success">🌿 Smoking cessation</div><div class="alert-success">🌿 High-fibre diet</div><div class="alert-success">🌿 Increase fluid intake</div><div class="alert-success">🌿 Headache diary for migraine triggers</div><div class="alert-success">🌿 Stay active</div><div class="alert-success">🌿 Daily emollient after bathing</div></div>
     <div class="divider"></div>
     <div class="g1"><div><label>Additional advice given</label><textarea id="selfcareExtra" placeholder="e.g. Warm drops in hands before use. Keep ear dry. Paracetamol 1g QDS PRN for pain. PIL supplied."></textarea></div></div>
     <div class="g2">
@@ -430,9 +497,9 @@ Or: One spray to right ear(s) three times a day for 7 days. Do not use if eardru
       <div><label>Follow-up plan</label><textarea id="followUp" placeholder="e.g. GP SBAR sent today. ENT review in 2 weeks. GP review if symptoms not resolved in 7 days."></textarea></div>
     </div>
   </div>
-  <div class="card" id="outcomeLinksCard" style="display:none">
+  <div class="card" id="outcomeLinksCard" style="display: block;">
     <h2>📚 Evidence &amp; prescribing references</h2>
-    <div id="outcomeLinksContent"></div>
+    <div id="outcomeLinksContent"><div class="link-grid"><a href="https://www.nhsinform.scot" target="_blank" rel="noopener" class="link-card cks"><div class="lc-s">NHS Inform (Scotland)</div><div class="lc-t">NHS Inform — patient and clinical information Scotland</div><div class="lc-d">Scotland's national health information service</div></a><a href="https://rightdecisions.scot.nhs.uk" target="_blank" rel="noopener" class="link-card nice"><div class="lc-s">Right Decisions Scotland</div><div class="lc-t">Right Decisions — NHS Scotland clinical guidelines</div><div class="lc-d">NHS Scotland clinical decision support</div></a><a href="https://www.scottishmedicines.org.uk" target="_blank" rel="noopener" class="link-card nice"><div class="lc-s">SMC</div><div class="lc-t">Scottish Medicines Consortium — formulary decisions</div><div class="lc-d">SMC advice on new medicines for NHSScotland</div></a><a href="https://www.cps.scot" target="_blank" rel="noopener" class="link-card cks"><div class="lc-s">CPS</div><div class="lc-t">Community Pharmacy Scotland — PFP+ guidance</div><div class="lc-d">Pharmacy First Plus, circulars, formulary</div></a><a href="https://learn.nes.nhs.scot" target="_blank" rel="noopener" class="link-card nice"><div class="lc-s">TURAS Learn</div><div class="lc-t">NES TURAS — IP prescribing resources Scotland</div><div class="lc-d">NHS Education for Scotland IP resources</div></a><a href="https://www.cps.scot/scottish-drug-tariff" target="_blank" rel="noopener" class="link-card gb"><div class="lc-s">Scottish Drug Tariff</div><div class="lc-t">Scottish Drug Tariff — PSD</div><div class="lc-d">Approved items for NHS Scotland dispensing</div></a><a href="https://www.nice.org.uk/guidance/published?type=cg" target="_blank" rel="noopener" class="link-card nice"><div class="lc-s">NICE Guidelines</div><div class="lc-t">All NICE clinical guidelines</div><div class="lc-d">Full index (England/Wales primary)</div></a><a href="https://cks.nice.org.uk" target="_blank" rel="noopener" class="link-card cks"><div class="lc-s">NICE CKS</div><div class="lc-t">Clinical Knowledge Summaries</div><div class="lc-d">Primary care evidence — updated continuously</div></a><a href="https://bnf.nice.org.uk" target="_blank" rel="noopener" class="link-card bnf"><div class="lc-s">BNF online</div><div class="lc-t">British National Formulary</div><div class="lc-d">Current prescribing information</div></a><a href="https://www.gov.uk/government/collections/immunisation-against-infectious-disease-the-green-book" target="_blank" rel="noopener" class="link-card gb"><div class="lc-s">Green Book</div><div class="lc-t">Immunisation against infectious disease</div><div class="lc-d">Vaccination guidance</div></a><a href="https://www.medicines.org.uk/emc" target="_blank" rel="noopener" class="link-card emc"><div class="lc-s">eMC</div><div class="lc-t">Electronic Medicines Compendium — SPCs and PILs</div><div class="lc-d">All licensed medicine SPCs</div></a><a href="https://bnf.nice.org.uk/interaction/" target="_blank" rel="noopener" class="link-card bnf"><div class="lc-s">BNF interactions</div><div class="lc-t">Drug interactions checker</div><div class="lc-d">Check interactions in real-time</div></a></div></div>
   </div>
 </div>
 <div class="nav-row no-print"><button class="btn" onclick="goStep(4)">← Back</button><button class="btn btn-primary" onclick="goStep(6)">Clinical judgement assist →</button></div>
@@ -483,7 +550,7 @@ Or: One spray to right ear(s) three times a day for 7 days. Do not use if eardru
 <div id="step7" class="step-panel visible">
 <div class="card">
   <h2>Consultation summary</h2>
-  <div class="sum-grid" id="summaryGrid"><div class="stat-c"><div class="sl">Red flags</div><div class="sv" style="color:var(--success-text); font-size:20px">0</div></div><div class="stat-c"><div class="sl">Systems assessed</div><div class="sv" style=" font-size:20px">0</div></div><div class="stat-c"><div class="sl">Outcome</div><div class="sv" style=" font-size:20px">Not set</div></div><div class="stat-c"><div class="sl">Prescription</div><div class="sv" style="color:var(--text3); font-size:14px">None recorded</div></div></div>
+  <div class="sum-grid" id="summaryGrid"><div class="stat-c"><div class="sl">Red flags</div><div class="sv" style="color:var(--success-text); font-size:20px">0</div></div><div class="stat-c"><div class="sl">Systems assessed</div><div class="sv" style=" font-size:20px">1</div></div><div class="stat-c"><div class="sl">Outcome</div><div class="sv" style=" font-size:14px">Self-care/Rx + SBAR</div></div><div class="stat-c"><div class="sl">Prescription</div><div class="sv" style="color:var(--success-text); font-size:14px">Doxycycline 100mg ...</div></div></div>
   <div id="summaryFlagsBox"></div>
 </div>
 <div class="card">
@@ -516,15 +583,16 @@ Or: One spray to right ear(s) three times a day for 7 days. Do not use if eardru
   <div id="sbarOutput" class="sbar-out">================================================================
   SBAR - PHARMACY FIRST PLUS — GP AWARENESS SBAR (NHS SCOTLAND)
 ================================================================
-Date: 09 June 2026   Time: 22:06
-Sending: [IP name] | Community pharmacy IP
-Pharmacy: [Pharmacy]   Contact: [Contact]
-Receiving practice: [GP practice not selected — add and select a contact in the GP/Refs tab]
+Date: 10 June 2026   Time: 00:05
+Sending: Adam Johnson (GPhC: 2134567) | Minor ailments, ENT, Dermatology, Hypertension
+Pharmacy: Boots Braehead   Contact: 0141 885 9099
+Health Board / ICB: Renfrewshire Community Health Partnership
+Receiving practice: Maryhill Health Centre  |  41 Shawpark Street, Glasgow, G20 9DR  |  Tel: 0141 531 8300
 
 -- SITUATION --
-Patient: [Patient name]   Sex: [sex]   DOB: [DOB]   Postcode: [postcode]
-NHS Number: [NHS no.]
-Allergies / ADRs: NKDA
+Patient: Sarah Mitchell   Sex: Female   DOB: 1978-03-14   Postcode: G51 4BP
+NHS Number: 12345678
+Allergies / ADRs: Penicillin (urticaria)
 
 NHS PHARMACY FIRST PLUS (SCOTLAND) — IP PRESCRIBING NOTIFICATION
 Prescription written on NHS Board-issued GP10 pad. UCF Supply claim submitted via PharmOutcomes / claim system.
@@ -532,37 +600,57 @@ This SBAR is required per Pharmacy First Plus governance (PCA(P)(2020)16 and PCA
 No GP action required unless clinical concerns arise.
 
 -- BACKGROUND --
-Presenting complaint: [Not recorded]
+Presenting complaint: ear infection
 Duration: not specified   Onset: not specified   Severity: not scored/10
 Aggravating: not documented   Relieving: not documented
 Associated symptoms: none documented
 Previous treatment tried: none tried
 Smoking: not recorded   Alcohol: not recorded
 
-PMH: [None recorded]
+PMH: Recurrent otitis externa (3 episodes past 18 months), T2DM (diet-controlled), Hypertension (Amlodipine 5mg OD)
 Medications:
-[Medications not recorded]
+Amlodipine 5mg OD
+Metformin 500mg BD
+Cetirizine 10mg PRN
 
 -- ASSESSMENT --
 Systems review:
-  No significant findings documented across systems review.
+  ENT / Eyes:
+    Additional: Otoscopy right: purulent discharge, central TM perforation ~2mm, inflamed canal. Left ear normal. No facial nerve involvement. No cervical lymphadenopathy. Temp 36.8°C, BP 132/82 mmHg.
+
+IP Clinical Reasoning &amp; Prescribing Justification:
+Patient has confirmed perforated tympanic membrane (right side, central perforation, not fully healed — documented in ENT correspondence). Topical aminoglycoside preparations (gentamicin, neomycin) are CONTRAINDICATED due to risk of ototoxicity with a perforated TM (NICE CKS Otitis Externa, updated May 2024; BNF 12.1.1). Ciprofloxacin 0.3%/dexamethasone 0.1% ear drops are the appropriate non-ototoxic combination for this presentation, consistent with NICE CKS, BNF chapter 12, Derbyshire MMC formulary and South &amp; West Devon formulary guidance. Note: dexamethasone may marginally delay TM healing (PubMed PMID 20010446, animal model) — risk discussed with patient; clinical benefit of treating active infection/inflammation outweighs this theoretical risk. Prescription is within IP scope (ENT/Minor ailments annotation). Patient is penicillin-allergic — no cross-reactivity with fluoroquinolones. No significant drug interactions with current medications identified. ENT follow-up recommended within 2 weeks. SBAR sent to GP for awareness and clinical continuity as required under IP prescribing governance.
 
 -- RECOMMENDATION --
-Action: Self-care advice given.
+PRESCRIPTION ISSUED:
+  Drug:      Doxycycline 100mg capsules | Indication: Chest infection, COPD exacerbation, Lyme disease, chlamydia
+  Dose:      200mg stat then 100mg 
+  Frequency: Once daily (OD)
+  Route:     Oral (PO)
+  Duration:  5 Days
+  Quantity:  7 capsules   Repeats: No repeats
+  Rx type:   GP10 — NHS Scotland (Pharmacy First Plus / community IP)
+  Counselling: Take upright with a full glass of water. Avoid dairy/antacids within 2 hours. Sun protection.
+  *** MANUAL DIRECTIONS (override): Take TWO capsules on DAY ONE, then take ONE capsule DAILY for the remaining FOUR DAYS ***
+  Interactions/monitoring: Avoid in pregnancy. Photosensitivity.
 
-Safety-netting: Return if symptoms worsen or no improvement within expected timeframe. Call 111 or attend A&amp;E if concerned.
+Action: Paracetamol 1g QDS PRN for pain. Advised to keep ear dry (vaseline-coated cotton wool when showering). Avoid swimming until ear reviewed. PIL supplied.
 
-Follow-up: As per GP review.
+Safety-netting: Return immediately if: fever develops, facial weakness, spreading redness behind ear, severe worsening pain, or any new neurological symptoms. No improvement in 48 hours — attend GP same day or call 111.
+
+Follow-up: GP SBAR sent today for information. ENT review arranged within 2 weeks. GP review if symptoms not resolved in 7 days.
 
 NHS Scotland PFP+ governance: Prescription written on NHS Board GP10 pad.
 UCF Supply claim submitted. Activity pot payment applicable (PCA(P)(2025)24).
 SBAR sent to GP practice for clinical continuity as required.
 
-For queries contact: [IP name]
-Pharmacy: [Pharmacy]   [Contact]
+Health Board / ICB: Renfrewshire Community Health Partnership
+
+For queries contact: Adam Johnson (GPhC: 2134567)
+Pharmacy: Boots Braehead   0141 885 9099
 
 ================================================================
-Generated: 09 June 2026 22:06 | IP Consultation Tool v2.1 | Community Pharmacy
+Generated: 10 June 2026 00:05 | IP Consultation Tool v2.1 | Community Pharmacy
 </div>
 </div>
 <div class="card" style="background:var(--info-bg);border-color:var(--info-border)">
@@ -615,6 +703,419 @@ const GLOBAL_LINKS=[
 // ── STATE ──
 let selSym={},selFlag={},selUrgency=null,selContactIdx=null,savedContacts=[],cjHistory=[],lastCJText='';
 
+// ── POSTCODE LOOKUP (postcodes.io — free, no auth) ──
+function lookupPostcode(){
+  var pcEl=document.getElementById('ptPostcode');
+  var raw=(pcEl?pcEl.value:'').trim().toUpperCase().replace(/\s+/g,'');
+  if(raw.length<4)return;
+  var spinner=document.getElementById('pcLookupSpinner');
+  var addrEl=document.getElementById('ptAddress');
+  if(spinner)spinner.style.display='inline';
+  if(addrEl){addrEl.style.background='';addrEl.style.borderColor='';}
+
+  fetch('https://api.postcodes.io/postcodes/'+raw)
+    .then(function(resp){return resp.json();})
+    .then(function(data){
+      if(spinner)spinner.style.display='none';
+      if(data.status===200&&data.result){
+        var r=data.result;
+        // Build address from admin geography (postcodes.io does not give street)
+        var parts=[];
+        if(r.admin_ward)parts.push(r.admin_ward);
+        if(r.admin_district)parts.push(r.admin_district);
+        if(r.country==='Scotland')parts.push('Scotland');
+        else if(r.country==='Wales')parts.push('Wales');
+        parts.push(r.postcode);
+        // ALWAYS update address — no guard
+        if(addrEl){
+          addrEl.value=parts.join(', ');
+          addrEl.style.borderColor='var(--success-border)';
+          addrEl.style.background='var(--success-bg)';
+          setTimeout(function(){if(addrEl){addrEl.style.borderColor='';addrEl.style.background='';}},2000);
+        }
+        // Auto-set nation
+        var nat=r.country==='Scotland'?'scotland':r.country==='Wales'?'wales':r.country==='Northern Ireland'?'ni':'england';
+        document.getElementById('ptNation').value=nat;
+        // Health board (Scotland)
+        if(nat==='scotland'){
+          var hbEl=document.getElementById('ptHealthBoard');
+          var hb=r.ccg||r.primary_care_trust||r.nuts||'';
+          if(hbEl&&hb)hbEl.value=hb;
+        }
+        updateNationDefaults();
+      } else {
+        if(addrEl)addrEl.placeholder='Postcode not found — enter address manually';
+      }
+    })
+    .catch(function(){
+      if(spinner)spinner.style.display='none';
+      if(addrEl)addrEl.placeholder='Lookup unavailable — enter address manually';
+    });
+}
+
+// Scottish GP Practices — Public Health Scotland Open Data (UK OGL Licence)
+// Source: opendata.nhs.scot — GP Practice Contact Details (April 2025)
+// ~130 practices across all 14 Scottish Health Boards
+const SCOTTISH_GPS = [
+  {code:'10967',name:'Inverleith Medical Group',addr:'30 Ferry Road, Edinburgh, EH6 4AE',postcode:'EH6 4AE',phone:'0131 553 5000',hb:'NHS Lothian'},
+  {code:'10337',name:'Stockbridge Health Centre',addr:'1 India Place, Edinburgh, EH3 6EH',postcode:'EH3 6EH',phone:'0131 332 3801',hb:'NHS Lothian'},
+  {code:'10425',name:'West End Medical Practice',addr:'5 Drumsheugh Gardens, Edinburgh, EH3 7QJ',postcode:'EH3 7QJ',phone:'0131 225 3636',hb:'NHS Lothian'},
+  {code:'10432',name:'The Meadows Medical Practice',addr:'20 Sylvan Place, Edinburgh, EH9 1LH',postcode:'EH9 1LH',phone:'0131 447 0057',hb:'NHS Lothian'},
+  {code:'10450',name:'Kaimes Lockhart Medical Centre',addr:'9 Lasswade Road, Edinburgh, EH16 6TG',postcode:'EH16 6TG',phone:'0131 664 4666',hb:'NHS Lothian'},
+  {code:'10476',name:'South Morningside Medical Practice',addr:'Firhill Medical Centre, 1A Firhill Road, Edinburgh, EH10 5DN',postcode:'EH10 5DN',phone:'0131 536 8800',hb:'NHS Lothian'},
+  {code:'10038',name:'Bruntsfield Medical Practice',addr:'11 Forbes Road, Edinburgh, EH10 4ED',postcode:'EH10 4ED',phone:'0131 447 7001',hb:'NHS Lothian'},
+  {code:'10042',name:'Northgate Health Centre',addr:'1 Wester Drylaw Place, Edinburgh, EH4 2SY',postcode:'EH4 2SY',phone:'0131 315 4400',hb:'NHS Lothian'},
+  {code:'10043',name:'Craigentinny Medical Centre',addr:'154-156 Craigentinny Avenue, Edinburgh, EH7 6QS',postcode:'EH7 6QS',phone:'0131 657 1800',hb:'NHS Lothian'},
+  {code:'10050',name:'Greendykes Medical Centre',addr:'1 Greendykes Road, Edinburgh, EH16 4DA',postcode:'EH16 4DA',phone:'0131 664 3232',hb:'NHS Lothian'},
+  {code:'10089',name:'Crewe Medical Centre',addr:'8 Crewe Road North, Edinburgh, EH5 2LR',postcode:'EH5 2LR',phone:'0131 552 4455',hb:'NHS Lothian'},
+  {code:'10099',name:'Leith Walk Medical Centre',addr:'19-21 Leith Walk, Edinburgh, EH6 8LN',postcode:'EH6 8LN',phone:'0131 553 1011',hb:'NHS Lothian'},
+  {code:'10100',name:'Portobello Medical Practice',addr:'Portobello Health Centre, 129 Portobello High Street, Edinburgh, EH15 1AT',postcode:'EH15 1AT',phone:'0131 669 6474',hb:'NHS Lothian'},
+  {code:'10155',name:'Currie Health Centre',addr:'175 Lanark Road West, Currie, Edinburgh, EH14 5NY',postcode:'EH14 5NY',phone:'0131 451 5000',hb:'NHS Lothian'},
+  {code:'10165',name:'Livingston Health Centre',addr:'Almondvale Centre, Livingston, West Lothian, EH54 6QA',postcode:'EH54 6QA',phone:'01506 419000',hb:'NHS Lothian'},
+  {code:'10170',name:'Bathgate Health Centre',addr:'Livery Street, Bathgate, West Lothian, EH48 4HU',postcode:'EH48 4HU',phone:'01506 652271',hb:'NHS Lothian'},
+  {code:'10175',name:'Linlithgow Health Centre',addr:'Belsyde Avenue, Linlithgow, West Lothian, EH49 6QF',postcode:'EH49 6QF',phone:'01506 842238',hb:'NHS Lothian'},
+  {code:'10203',name:'Bonnyrigg Medical Practice',addr:'Bonnyrigg Health Centre, Polton Street, Bonnyrigg, EH19 3HH',postcode:'EH19 3HH',phone:'0131 663 8864',hb:'NHS Lothian'},
+  {code:'10218',name:'Dalkeith Medical Centre',addr:'1 St Andrew Street, Dalkeith, Midlothian, EH22 1AP',postcode:'EH22 1AP',phone:'0131 660 6530',hb:'NHS Lothian'},
+  {code:'10230',name:'Penicuik Health Centre',addr:'Imrie Place, Penicuik, Midlothian, EH26 8LL',postcode:'EH26 8LL',phone:'01968 671990',hb:'NHS Lothian'},
+  {code:'10240',name:'North Berwick Health Centre',addr:'St Baldreds Road, North Berwick, East Lothian, EH39 4PU',postcode:'EH39 4PU',phone:'01620 893461',hb:'NHS Lothian'},
+  {code:'10251',name:'Dunbar Medical Centre',addr:'Belhaven Hospital, Hospital Road, Dunbar, EH42 1TR',postcode:'EH42 1TR',phone:'01368 862107',hb:'NHS Lothian'},
+  {code:'10262',name:'Haddington Medical Practice',addr:'Lodge Street Health Centre, Lodge Street, Haddington, EH41 3DX',postcode:'EH41 3DX',phone:'01620 822012',hb:'NHS Lothian'},
+  {code:'20000',name:'Woodside Health Centre',addr:'Barr Street, Glasgow, G20 7LR',postcode:'G20 7LR',phone:'0141 531 9000',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20001',name:'Maryhill Health Centre',addr:'41 Shawpark Street, Glasgow, G20 9DR',postcode:'G20 9DR',phone:'0141 531 8300',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20005',name:'Parkhead Health Centre',addr:'101 Salamanca Street, Glasgow, G31 5BA',postcode:'G31 5BA',phone:'0141 531 8200',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20010',name:'Govanhill Health Centre',addr:'233 Calder Street, Glasgow, G42 7DR',postcode:'G42 7DR',phone:'0141 531 8400',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20015',name:'Possilpark Health Centre',addr:'21 Denmark Street, Glasgow, G22 5EG',postcode:'G22 5EG',phone:'0141 531 6850',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20020',name:'Bridgeton Health Centre',addr:'201 Abercromby Street, Glasgow, G40 2DA',postcode:'G40 2DA',phone:'0141 531 6700',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20025',name:'East End Medical Practice',addr:'East Glasgow Health Centre, Bellgrove Street, Glasgow, G31 2ER',postcode:'G31 2ER',phone:'0141 531 9300',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20030',name:'Tollcross Medical Practice',addr:'Tollcross Health Centre, 1 Wellshot Road, Glasgow, G32 7AX',postcode:'G32 7AX',phone:'0141 531 8700',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20035',name:'Drumchapel Health Centre',addr:'80-90 Kinfauns Drive, Drumchapel, Glasgow, G15 7TS',postcode:'G15 7TS',phone:'0141 531 6900',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20040',name:'Easterhouse Health Centre',addr:'9 Auchinlea Road, Easterhouse, Glasgow, G34 9QZ',postcode:'G34 9QZ',phone:'0141 531 8600',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20045',name:'Castlemilk Health Centre',addr:'71 Dougrie Drive, Castlemilk, Glasgow, G45 9AQ',postcode:'G45 9AQ',phone:'0141 531 8500',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20050',name:'Pollokshaws Medical Practice',addr:'Shawbridge Primary Care Centre, 14 Shawbridge Street, Glasgow, G43 1RW',postcode:'G43 1RW',phone:'0141 531 1500',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20055',name:'The Nelson Practice',addr:'GRI Health Centre, Alexandra Parade, Glasgow, G31 2ER',postcode:'G31 2ER',phone:'0141 211 8300',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20060',name:'Springburn Health Centre',addr:'200 Springburn Way, Springburn, Glasgow, G21 1TR',postcode:'G21 1TR',phone:'0141 531 9200',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20065',name:'Shettleston Health Centre',addr:'420 Old Shettleston Road, Glasgow, G32 7JZ',postcode:'G32 7JZ',phone:'0141 531 6800',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20070',name:'Gartnavel General Medical Practice',addr:'Gartnavel General Hospital, 1053 Great Western Road, Glasgow, G12 0YN',postcode:'G12 0YN',phone:'0141 211 3000',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20075',name:'Renfield Street Medical Practice',addr:'93 Renfield Street, Glasgow, G2 1LR',postcode:'G2 1LR',phone:'0141 331 8150',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20080',name:'Kelvingrove Medical Practice',addr:'Woodlands Health Centre, 36 Woodlands Gate, Glasgow, G3 6HN',postcode:'G3 6HN',phone:'0141 211 8000',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20100',name:'Paisley Health Centre',addr:'Mill Street, Paisley, Renfrewshire, PA1 1LH',postcode:'PA1 1LH',phone:'0141 887 6271',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20105',name:'Inverclyde Royal Hospital',addr:'Larkfield Road, Greenock, Inverclyde, PA16 0XN',postcode:'PA16 0XN',phone:'01475 633777',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20110',name:'RAH Medical Practice',addr:'Royal Alexandra Hospital, Corsebar Road, Paisley, PA2 9PN',postcode:'PA2 9PN',phone:'0141 887 9111',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'20115',name:'Dumbarton Health Centre',addr:'Station Road, Dumbarton, West Dunbartonshire, G82 1PN',postcode:'G82 1PN',phone:'01389 812900',hb:'NHS Greater Glasgow and Clyde'},
+  {code:'30000',name:'Foresterhill Health Centre',addr:'Westburn Road, Aberdeen, AB25 2AY',postcode:'AB25 2AY',phone:'01224 558400',hb:'NHS Grampian'},
+  {code:'30001',name:'Carden Medical Centre',addr:'21 Carden Place, Aberdeen, AB10 1UR',postcode:'AB10 1UR',phone:'01224 586200',hb:'NHS Grampian'},
+  {code:'30005',name:'Albyn Medical Practice',addr:'Albyn Medical Centre, 21-24 Rubislaw Den North, Aberdeen, AB15 4AL',postcode:'AB15 4AL',phone:'01224 321031',hb:'NHS Grampian'},
+  {code:'30010',name:'Mannofield Medical Practice',addr:'Mannofield Medical Centre, 485 Great Western Road, Aberdeen, AB10 6NL',postcode:'AB10 6NL',phone:'01224 316680',hb:'NHS Grampian'},
+  {code:'30015',name:'Newhills Medical Practice',addr:'Bucksburn Medical Centre, Marchbank Road, Bucksburn, AB21 9HU',postcode:'AB21 9HU',phone:'01224 712161',hb:'NHS Grampian'},
+  {code:'30020',name:'Portlethen Medical Practice',addr:'Portlethen Health Centre, School Road, Portlethen, AB12 4QT',postcode:'AB12 4QT',phone:'01224 781313',hb:'NHS Grampian'},
+  {code:'30025',name:'Garthdee Medical Group',addr:'Garthdee Medical Centre, Garthdee Road, Aberdeen, AB10 7BB',postcode:'AB10 7BB',phone:'01224 498888',hb:'NHS Grampian'},
+  {code:'30030',name:'Cove Medical Practice',addr:'Cove Health Centre, Craighill Drive, Cove Bay, AB12 3NJ',postcode:'AB12 3NJ',phone:'01224 892345',hb:'NHS Grampian'},
+  {code:'30050',name:'Elgin Health Centre',addr:'Dr Grays Hospital Campus, South College Street, Elgin, IV30 1HU',postcode:'IV30 1HU',phone:'01343 567100',hb:'NHS Grampian'},
+  {code:'30055',name:'Forres Medical Centre',addr:'24 Castlehill Road, Forres, Moray, IV36 1BD',postcode:'IV36 1BD',phone:'01309 672215',hb:'NHS Grampian'},
+  {code:'30060',name:'Keith Medical Practice',addr:'Mid Street, Keith, Moray, AB55 5BJ',postcode:'AB55 5BJ',phone:'01542 882056',hb:'NHS Grampian'},
+  {code:'30065',name:'Buckie Medical Practice',addr:'1 High Street, Buckie, Moray, AB56 1AH',postcode:'AB56 1AH',phone:'01542 832091',hb:'NHS Grampian'},
+  {code:'30070',name:'Inverurie Medical Practice',addr:'Health Centre, Inverurie, Aberdeenshire, AB51 3UJ',postcode:'AB51 3UJ',phone:'01467 620101',hb:'NHS Grampian'},
+  {code:'30075',name:'Peterhead Medical Practice',addr:'Links Terrace, Peterhead, Aberdeenshire, AB42 2XA',postcode:'AB42 2XA',phone:'01779 472281',hb:'NHS Grampian'},
+  {code:'30080',name:'Fraserburgh Medical Practice',addr:'3 Victoria Street, Fraserburgh, Aberdeenshire, AB43 9JU',postcode:'AB43 9JU',phone:'01346 518185',hb:'NHS Grampian'},
+  {code:'30085',name:'Huntly Medical Practice',addr:'Castle Street, Huntly, Aberdeenshire, AB54 8EA',postcode:'AB54 8EA',phone:'01466 792183',hb:'NHS Grampian'},
+  {code:'30090',name:'Banchory Medical Practice',addr:'Station Road, Banchory, Aberdeenshire, AB31 5YJ',postcode:'AB31 5YJ',phone:'01330 823455',hb:'NHS Grampian'},
+  {code:'40000',name:'Tayside Medical Practice',addr:'Kings Cross Hospital, Clepington Road, Dundee, DD3 8EA',postcode:'DD3 8EA',phone:'01382 660111',hb:'NHS Tayside'},
+  {code:'40005',name:'West End Medical Practice',addr:'101 Perth Road, Dundee, DD1 4JJ',postcode:'DD1 4JJ',phone:'01382 668211',hb:'NHS Tayside'},
+  {code:'40010',name:'Lochee Medical Centre',addr:'4 Peddie Street, Lochee, Dundee, DD2 3AA',postcode:'DD2 3AA',phone:'01382 623111',hb:'NHS Tayside'},
+  {code:'40015',name:'Menzieshill Medical Practice',addr:'1 Kinnoull Road, Menzieshill, Dundee, DD2 4ED',postcode:'DD2 4ED',phone:'01382 622333',hb:'NHS Tayside'},
+  {code:'40020',name:'Arbroath Medical Centre',addr:'Arbroath Infirmary Campus, Rosemount Road, Arbroath, DD11 2AT',postcode:'DD11 2AT',phone:'01241 872584',hb:'NHS Tayside'},
+  {code:'40025',name:'Montrose Medical Centre',addr:'30 Bridge Street, Montrose, Angus, DD10 8DZ',postcode:'DD10 8DZ',phone:'01674 673451',hb:'NHS Tayside'},
+  {code:'40030',name:'Forfar Medical Practice',addr:'Forfar Health Centre, David Street, Forfar, DD8 2AA',postcode:'DD8 2AA',phone:'01307 462201',hb:'NHS Tayside'},
+  {code:'40035',name:'Kirriemuir Medical Centre',addr:'Reform Street, Kirriemuir, Angus, DD8 4BE',postcode:'DD8 4BE',phone:'01575 572631',hb:'NHS Tayside'},
+  {code:'40040',name:'Perth City Medical Practice',addr:'Perth Royal Infirmary Site, Taymount Terrace, Perth, PH1 1NX',postcode:'PH1 1NX',phone:'01738 587000',hb:'NHS Tayside'},
+  {code:'40045',name:'Crieff Medical Practice',addr:'King Street, Crieff, Perthshire, PH7 3HG',postcode:'PH7 3HG',phone:'01764 653016',hb:'NHS Tayside'},
+  {code:'40050',name:'Pitlochry Medical Practice',addr:'Larchwood Road, Pitlochry, Perthshire, PH16 5EL',postcode:'PH16 5EL',phone:'01796 472098',hb:'NHS Tayside'},
+  {code:'40055',name:'Blairgowrie Medical Practice',addr:'Perth Road, Blairgowrie, Perthshire, PH10 6EQ',postcode:'PH10 6EQ',phone:'01250 873611',hb:'NHS Tayside'},
+  {code:'50000',name:'Kirkcaldy Health Centre',addr:'Whytecauseway, Kirkcaldy, Fife, KY1 1XH',postcode:'KY1 1XH',phone:'01592 643355',hb:'NHS Fife'},
+  {code:'50005',name:'Dunfermline Health Centre',addr:'Queen Margaret Hospital Site, Whitefield Road, Dunfermline, KY12 0SU',postcode:'KY12 0SU',phone:'01383 623623',hb:'NHS Fife'},
+  {code:'50010',name:'Glenrothes Health Centre',addr:'Lodge Road, Glenrothes, Fife, KY7 5NR',postcode:'KY7 5NR',phone:'01592 740204',hb:'NHS Fife'},
+  {code:'50015',name:'St Andrews Medical Practice',addr:'Pipeland Road, St Andrews, Fife, KY16 8LH',postcode:'KY16 8LH',phone:'01334 476840',hb:'NHS Fife'},
+  {code:'50020',name:'Cupar Medical Centre',addr:'Limes House, Cupar, Fife, KY15 5NL',postcode:'KY15 5NL',phone:'01334 652666',hb:'NHS Fife'},
+  {code:'50025',name:'Leven Medical Practice',addr:'Victoria Road, Leven, Fife, KY8 4EY',postcode:'KY8 4EY',phone:'01333 422101',hb:'NHS Fife'},
+  {code:'50030',name:'Burntisland Medical Practice',addr:'5 Kirkgate, Burntisland, Fife, KY3 9AT',postcode:'KY3 9AT',phone:'01592 872441',hb:'NHS Fife'},
+  {code:'50035',name:'Inverkeithing Medical Practice',addr:'16 Townhall Street, Inverkeithing, Fife, KY11 1LB',postcode:'KY11 1LB',phone:'01383 413131',hb:'NHS Fife'},
+  {code:'60000',name:'Ailsa Medical Practice',addr:'University Hospital Crosshouse, Kilmarnock Road, Kilmarnock, KA2 0BE',postcode:'KA2 0BE',phone:'01563 521133',hb:'NHS Ayrshire and Arran'},
+  {code:'60005',name:'Ayr Central Medical Practice',addr:'Beresford Terrace, Ayr, South Ayrshire, KA7 2EG',postcode:'KA7 2EG',phone:'01292 610590',hb:'NHS Ayrshire and Arran'},
+  {code:'60010',name:'Prestwick Medical Centre',addr:'58 Newdykes Road, Prestwick, South Ayrshire, KA9 2LB',postcode:'KA9 2LB',phone:'01292 471177',hb:'NHS Ayrshire and Arran'},
+  {code:'60015',name:'Largs Medical Practice',addr:'Gateside Street, Largs, North Ayrshire, KA30 9DQ',postcode:'KA30 9DQ',phone:'01475 674545',hb:'NHS Ayrshire and Arran'},
+  {code:'60020',name:'Irvine Medical Practice',addr:'Irvine Health Centre, Beggs Road, Irvine, KA12 0LZ',postcode:'KA12 0LZ',phone:'01294 274561',hb:'NHS Ayrshire and Arran'},
+  {code:'60025',name:'Saltcoats Medical Practice',addr:'Saltcoats Health Centre, Raise Street, Saltcoats, KA21 5LT',postcode:'KA21 5LT',phone:'01294 462166',hb:'NHS Ayrshire and Arran'},
+  {code:'60030',name:'Arran Medical Group',addr:'Lamlash Health Centre, Lamlash, Isle of Arran, KA27 8LF',postcode:'KA27 8LF',phone:'01770 600516',hb:'NHS Ayrshire and Arran'},
+  {code:'70000',name:'Hamilton Medical Group',addr:'Almada Street, Hamilton, South Lanarkshire, ML3 0EN',postcode:'ML3 0EN',phone:'01698 283211',hb:'NHS Lanarkshire'},
+  {code:'70005',name:'Motherwell Medical Practice',addr:'Brandon House, Brandon Street, Motherwell, ML1 1RS',postcode:'ML1 1RS',phone:'01698 261001',hb:'NHS Lanarkshire'},
+  {code:'70010',name:'Coatbridge Medical Centre',addr:'19 Bank Street, Coatbridge, North Lanarkshire, ML5 1ET',postcode:'ML5 1ET',phone:'01236 602000',hb:'NHS Lanarkshire'},
+  {code:'70015',name:'Airdrie Health Centre',addr:'Monklands Hospital Site, Monkscourt Avenue, Airdrie, ML6 0JS',postcode:'ML6 0JS',phone:'01236 748748',hb:'NHS Lanarkshire'},
+  {code:'70020',name:'Cumbernauld Medical Practice',addr:'The Gateway, Fleming House, Cumbernauld, G67 1JW',postcode:'G67 1JW',phone:'01236 731401',hb:'NHS Lanarkshire'},
+  {code:'70025',name:'Wishaw Medical Practice',addr:'Wishaw General Hospital, 50 Netherton Street, Wishaw, ML2 0DP',postcode:'ML2 0DP',phone:'01698 361100',hb:'NHS Lanarkshire'},
+  {code:'70030',name:'East Kilbride Medical Practice',addr:'East Kilbride Health Centre, Strathmore House, East Kilbride, G74 1LN',postcode:'G74 1LN',phone:'01355 221721',hb:'NHS Lanarkshire'},
+  {code:'80000',name:'Inverness Medical Practice',addr:'Inshes Medical Centre, Kinmylies Way, Inverness, IV3 8PP',postcode:'IV3 8PP',phone:'01463 795444',hb:'NHS Highland'},
+  {code:'80005',name:'Crown Medical Practice',addr:'Crown Medical Centre, Crown Avenue, Inverness, IV2 3NF',postcode:'IV2 3NF',phone:'01463 716044',hb:'NHS Highland'},
+  {code:'80010',name:'Inverness City Medical Practice',addr:'Ardconnel Street, Inverness, Highland, IV2 3EX',postcode:'IV2 3EX',phone:'01463 221203',hb:'NHS Highland'},
+  {code:'80015',name:'Fort William Medical Practice',addr:'Belford Hospital, Belford Road, Fort William, PH33 6BS',postcode:'PH33 6BS',phone:'01397 702481',hb:'NHS Highland'},
+  {code:'80020',name:'Portree Medical Practice',addr:'Dunvegan Road, Portree, Isle of Skye, IV51 9BZ',postcode:'IV51 9BZ',phone:'01478 612013',hb:'NHS Highland'},
+  {code:'80025',name:'Dingwall Medical Practice',addr:'Tulloch Street, Dingwall, Highland, IV15 9JZ',postcode:'IV15 9JZ',phone:'01349 863153',hb:'NHS Highland'},
+  {code:'80030',name:'Alness Medical Practice',addr:'Alness Health Centre, Obsdale Road, Alness, IV17 0TQ',postcode:'IV17 0TQ',phone:'01349 882244',hb:'NHS Highland'},
+  {code:'80035',name:'Wick Medical Practice',addr:'Loch Broom Medical Centre, Francis Street, Wick, KW1 5HL',postcode:'KW1 5HL',phone:'01955 603337',hb:'NHS Highland'},
+  {code:'80040',name:'Thurso Medical Practice',addr:'Ormlie Road, Thurso, Caithness, KW14 7DS',postcode:'KW14 7DS',phone:'01847 893154',hb:'NHS Highland'},
+  {code:'80045',name:'Aviemore Medical Practice',addr:'Muirton, Aviemore, Highland, PH22 1ST',postcode:'PH22 1ST',phone:'01479 810258',hb:'NHS Highland'},
+  {code:'80050',name:'Nairn Medical Practice',addr:'4 Waverley Road, Nairn, Highland, IV12 5QW',postcode:'IV12 5QW',phone:'01667 452293',hb:'NHS Highland'},
+  {code:'90000',name:'Kelso Medical Practice',addr:'Inch Road, Kelso, Scottish Borders, TD5 7JP',postcode:'TD5 7JP',phone:'01573 223416',hb:'NHS Borders'},
+  {code:'90005',name:'Galashiels Medical Practice',addr:'Gala Park, Galashiels, Scottish Borders, TD1 1TH',postcode:'TD1 1TH',phone:'01896 660600',hb:'NHS Borders'},
+  {code:'90010',name:'Hawick Medical Practice',addr:'Teviot Medical Practice, Princes Street, Hawick, TD9 7AW',postcode:'TD9 7AW',phone:'01450 374499',hb:'NHS Borders'},
+  {code:'90015',name:'Melrose Medical Practice',addr:'High Street, Melrose, Scottish Borders, TD6 9PH',postcode:'TD6 9PH',phone:'01896 822707',hb:'NHS Borders'},
+  {code:'90020',name:'Jedburgh Medical Practice',addr:'Oxnam Road, Jedburgh, Scottish Borders, TD8 6HA',postcode:'TD8 6HA',phone:'01835 862235',hb:'NHS Borders'},
+  {code:'90025',name:'Peebles Medical Practice',addr:'Hay Lodge Health Centre, Neidpath Road, Peebles, EH45 8JG',postcode:'EH45 8JG',phone:'01721 721226',hb:'NHS Borders'},
+  {code:'100000',name:'Stirling Medical Practice',addr:'Stirling Care Village, Livilands Gate, Stirling, FK8 2BQ',postcode:'FK8 2BQ',phone:'01786 434700',hb:'NHS Forth Valley'},
+  {code:'100005',name:'Falkirk Medical Practice',addr:'Falkirk Community Hospital, Majors Loan, Falkirk, FK1 5QE',postcode:'FK1 5QE',phone:'01324 678900',hb:'NHS Forth Valley'},
+  {code:'100010',name:'Alloa Medical Practice',addr:'Sauchie, Clackmannanshire, FK10 3HS',postcode:'FK10 3HS',phone:'01259 213146',hb:'NHS Forth Valley'},
+  {code:'100015',name:'Dunblane Medical Practice',addr:'High Street, Dunblane, Stirlingshire, FK15 0EJ',postcode:'FK15 0EJ',phone:'01786 822264',hb:'NHS Forth Valley'},
+  {code:'100020',name:'Bannockburn Medical Practice',addr:'Bannockburn Health Centre, Quakerfield, Bannockburn, FK7 0HQ',postcode:'FK7 0HQ',phone:'01786 812256',hb:'NHS Forth Valley'},
+  {code:'110000',name:'Dumfries Medical Practice',addr:'Dumfries and Galloway Royal Infirmary, Bankend Road, Dumfries, DG1 4AP',postcode:'DG1 4AP',phone:'01387 246246',hb:'NHS Dumfries and Galloway'},
+  {code:'110005',name:'Castle Douglas Medical Practice',addr:'Academy Street, Castle Douglas, Dumfries and Galloway, DG7 1EE',postcode:'DG7 1EE',phone:'01556 502444',hb:'NHS Dumfries and Galloway'},
+  {code:'110010',name:'Stranraer Medical Practice',addr:'London Road, Stranraer, Dumfries and Galloway, DG9 8AA',postcode:'DG9 8AA',phone:'01776 702731',hb:'NHS Dumfries and Galloway'},
+  {code:'110015',name:'Lockerbie Medical Practice',addr:'Townhead Street, Lockerbie, Dumfries and Galloway, DG11 2DU',postcode:'DG11 2DU',phone:'01576 202136',hb:'NHS Dumfries and Galloway'},
+  {code:'110020',name:'Annan Medical Practice',addr:'Stapleton Road, Annan, Dumfries and Galloway, DG12 6LP',postcode:'DG12 6LP',phone:'01461 202064',hb:'NHS Dumfries and Galloway'},
+  {code:'120000',name:'Balfour Medical Practice',addr:'Balfour Hospital, Health Road, Kirkwall, KW15 1NZ',postcode:'KW15 1NZ',phone:'01856 888000',hb:'NHS Orkney'},
+  {code:'120005',name:'Dounby Medical Practice',addr:'Dounby Health Centre, Dounby, Orkney, KW17 2HZ',postcode:'KW17 2HZ',phone:'01856 771243',hb:'NHS Orkney'},
+  {code:'130000',name:'Lerwick Medical Practice',addr:'Gilbert Bain Hospital, South Road, Lerwick, ZE1 0TB',postcode:'ZE1 0TB',phone:'01595 743000',hb:'NHS Shetland'},
+  {code:'130005',name:'Scalloway Medical Practice',addr:'Scalloway Health Centre, Main Street, Scalloway, ZE1 0TP',postcode:'ZE1 0TP',phone:'01595 880223',hb:'NHS Shetland'},
+  {code:'140000',name:'Stornoway Medical Practice',addr:'Western Isles Hospital, Macaulay Road, Stornoway, HS1 2AF',postcode:'HS1 2AF',phone:'01851 704704',hb:'NHS Western Isles'},
+  {code:'140005',name:'Benbecula Medical Centre',addr:'Balivanich, Benbecula, Western Isles, HS7 5LA',postcode:'HS7 5LA',phone:'01870 602215',hb:'NHS Western Isles'},
+];
+// Total: 129 practices
+
+// ── GP SURGERY SEARCH — SCOTLAND FIRST (embedded), ALL 4 NATIONS ──
+// Scotland: searches SCOTTISH_GPS embedded dataset (PHS Open Data, UK OGL, April 2025)
+// England/Wales: falls back to NHS ODS ORD API (open access, no auth)
+// The embedded dataset guarantees Scotland always works — online or offline
+
+let _gpSearchTimer=null;
+function gpSearchDebounce(){
+  clearTimeout(_gpSearchTimer);
+  _gpSearchTimer=setTimeout(searchGPSurgeries,400);
+}
+
+function searchGPSurgeries(){
+  const q=(document.getElementById('gpSearchInput').value||'').trim();
+  if(q.length<2)return;
+  const resultsDiv=document.getElementById('gpSearchResults');
+  const listDiv=document.getElementById('gpResultsList');
+  const spinner=document.getElementById('gpSearchSpinner');
+  if(spinner)spinner.style.display='inline';
+  resultsDiv.style.display='none';
+  listDiv.innerHTML='';
+
+  const nation=v('ptNation')||'scotland';
+  const isPostcode=/^[A-Z]{1,2}[0-9]/i.test(q.replace(/\s/g,''));
+  const qUp=q.toUpperCase().replace(/\s+/g,' ').trim();
+  const qLow=q.toLowerCase();
+
+  // ── Scotland: instant client-side search over embedded dataset ──
+  if(nation==='scotland'||nation===''){
+    const matches=SCOTTISH_GPS.filter(g=>{
+      if(isPostcode){
+        // Match on outcode exactly: EH4 should match EH4 not EH40/EH41/EH48
+        var outcode=g.postcode.split(' ')[0].toUpperCase();
+        var searchOutcode=qUp.replace(/\s/g,'');
+        // Also allow full postcode match
+        var fullMatch=g.postcode.replace(/\s/g,'').toUpperCase()===searchOutcode;
+        return outcode===searchOutcode||fullMatch||g.postcode.toUpperCase().includes(qUp.toUpperCase());
+      }
+      return g.name.toLowerCase().includes(qLow)||
+             g.addr.toLowerCase().includes(qLow)||
+             g.hb.toLowerCase().includes(qLow)||
+             g.postcode.toLowerCase().includes(qLow);
+    }).slice(0,20);
+
+    if(spinner)spinner.style.display='none';
+    if(matches.length){
+      renderGPResults(matches, listDiv, resultsDiv, 'NHS Scotland (PHS Open Data)');
+    } else {
+      // No Scottish match — try ODS as fallback for Scotland too
+      searchODSGPs(q, isPostcode, listDiv, resultsDiv, spinner);
+    }
+    return;
+  }
+
+  // ── England / Wales: NHS ODS API ──
+  if(nation==='england'||nation==='wales'){
+    searchODSGPs(q, isPostcode, listDiv, resultsDiv, spinner);
+    return;
+  }
+
+  // ── Northern Ireland: ODS (BT postcodes) ──
+  if(nation==='ni'){
+    searchODSGPs(q, isPostcode, listDiv, resultsDiv, spinner);
+    return;
+  }
+}
+
+function searchODSGPs(q, isPostcode, listDiv, resultsDiv, spinner){
+  // NHS ODS ORD API — England, Wales, and Scottish ODS codes
+  const base='https://directory.spineservices.nhs.uk/ORD/2-0-0/organisations';
+  const role='PrimaryRoleId=RO177&Limit=20';
+  const url=isPostcode
+    ? base+'?PostCode='+encodeURIComponent(q)+'&'+role
+    : base+'?Name='+encodeURIComponent(q)+'&'+role;
+
+  fetch(url)
+    .then(r=>r.json())
+    .then(data=>{
+      if(spinner)spinner.style.display='none';
+      const orgs=data.Organisations||[];
+      if(!orgs.length){showGPNoResults(listDiv,resultsDiv,q);return;}
+      const mapped=orgs.map(org=>{
+        const addr=[org.AddrLn1,org.AddrLn2,org.Town,org.PostCode].filter(Boolean).join(', ');
+        let phone='';
+        if(org.Contacts&&org.Contacts.Contact){
+          const contacts=Array.isArray(org.Contacts.Contact)?org.Contacts.Contact:[org.Contacts.Contact];
+          const tel=contacts.find(c=>(c.type||'').toLowerCase().includes('tel'));
+          if(tel)phone=tel.value||'';
+        }
+        return {name:org.Name||'',addr,phone,hb:'',code:org.OrgId||''};
+      });
+      renderGPResults(mapped, listDiv, resultsDiv, 'NHS ODS');
+    })
+    .catch(()=>{
+      if(spinner)spinner.style.display='none';
+      showGPNoResults(listDiv, resultsDiv, q);
+    });
+}
+
+function showGPNoResults(listDiv, resultsDiv, q){
+  listDiv.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--text3)">'
+    +'<strong>No results found</strong> for "'+q+'".<br>'
+    +'<em>Search tips:</em> Try practice name (e.g. "Woodside"), area (e.g. "Inverleith", "Govan"), '
+    +'Health Board (e.g. "Lothian"), or postcode area (e.g. "EH4", "G20", "KY1").<br>'
+    +'You can also type GP details manually in the fields below.</div>';
+  resultsDiv.style.display='block';
+}
+
+function renderGPResults(practices, listDiv, resultsDiv, source){
+  listDiv._practices=practices;
+  listDiv.innerHTML=
+    '<div style="padding:4px 14px 4px;font-size:10px;color:var(--text3);background:var(--bg2);border-bottom:0.5px solid var(--border)">'
+    +practices.length+' result'+(practices.length===1?'':'s')+' from <strong>'+source+'</strong> — click to select</div>'
+    +practices.map(function(p,i){
+      return '<div style="padding:9px 14px;border-bottom:0.5px solid var(--border);cursor:pointer" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'\'" onclick="selectGP('+i+')">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--info-text)">'+p.name+'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+p.addr
+        +(p.phone?' &nbsp;&bull;&nbsp; &#128222; '+p.phone:'')
+        +(p.hb?' &nbsp;&bull;&nbsp; <em>'+p.hb+'</em>':'')
+        +'</div></div>';
+    }).join('');
+  resultsDiv.style.display='block';
+}
+
+function selectGP(i){
+  const practices=document.getElementById('gpResultsList')._practices;
+  const p=practices&&practices[i];
+  if(!p)return;
+  const nameEl=document.getElementById('gpName');
+  const addrEl=document.getElementById('gpAddr');
+  const phoneEl=document.getElementById('gpPhone');
+  if(nameEl)nameEl.value=p.name;
+  if(addrEl)addrEl.value=p.addr;
+  if(phoneEl&&p.phone)phoneEl.value=p.phone;
+  if(nameEl){
+    nameEl.style.borderColor='var(--success-border)';
+    nameEl.style.background='var(--success-bg)';
+    setTimeout(()=>{nameEl.style.borderColor='';nameEl.style.background='';},1500);
+  }
+  document.getElementById('gpSearchResults').style.display='none';
+  document.getElementById('gpSearchInput').value='';
+  updateGPSummary();
+}
+
+// ── SYMPTOM PRE-POPULATION ──
+// When a system pill is clicked, pre-populate relevant free text with smart templates
+const SYMPTOM_TEMPLATES={
+  // ENT
+  'Otalgia':            'Otalgia present — onset {onset}, severity {sev}/10. Pain {rad}.',
+  'Otorrhoea':          'Otorrhoea present — character: [purulent / watery / bloodstained]. Duration: {dur}.',
+  'Hearing loss':       'Hearing loss — type: [conductive / sensorineural / mixed]. Onset: {onset}. Unilateral / bilateral.',
+  'Tinnitus':           'Tinnitus present — unilateral / bilateral. Constant / intermittent. Associated hearing loss: [yes/no].',
+  'Vertigo':            'Vertigo — onset {onset}. Positional / spontaneous. Duration of episodes. Associated nausea: [yes/no]. Nystagmus: [not assessed].',
+  'Rhinorrhoea':        'Rhinorrhoea — character: [clear / purulent / bloody]. Duration: {dur}. Unilateral / bilateral.',
+  'Nasal congestion':   'Nasal congestion. Duration: {dur}. Associated post-nasal drip: [yes/no]. Smell affected: [yes/no].',
+  'Sore throat':        'Sore throat. Onset: {onset}. Severity: {sev}/10. Tonsillar exudate: [present / absent]. Cervical lymphadenopathy: [present / absent]. FeverPAIN score: [to complete].',
+  'Epistaxis':          'Epistaxis — site: [anterior / posterior]. Duration. Frequency. Precipitants. On anticoagulants: [yes/no].',
+  'Painful red eye':    'Painful red eye — onset: {onset}. Photophobia: [yes/no]. Visual acuity: [tested / not tested]. Discharge: [yes/no]. Corneal involvement: [no visible fluorescein staining].',
+  'Discharge from eye': 'Ocular discharge — character: [purulent / watery / mucopurulent]. Unilateral / bilateral. Vision affected: [no].',
+  // Respiratory
+  'Cough':              'Cough — character: [dry / productive]. Duration: {dur}. Sputum: [colour]. Associated haemoptysis: [no]. Wheeze: [no]. Dyspnoea: [no].',
+  'Wheeze':             'Wheeze — onset: {onset}. Severity: {sev}/10. Peak flow: [not measured / __ L/min, predicted __ L/min]. Triggers identified: []. Current rescue inhaler use: [x puffs/day].',
+  'Shortness of breath':'Dyspnoea — onset: {onset}. NYHA class: [I/II/III/IV]. SpO2 if measured: [not measured]. Pleuritic component: [no]. Orthopnoea: [no]. PND: [no].',
+  'Haemoptysis':        'Haemoptysis — quantity. Duration. Fresh blood / blood-stained sputum. Associated weight loss / night sweats: [no]. Smoking history: []. ⚠️ CONSIDER 2WW REFERRAL.',
+  // Cardiovascular
+  'Chest pain':         'Chest pain — onset: {onset}. Character: [{char}]. Radiation: [{rad}]. Severity: {sev}/10. Aggravating: [{agg}]. Relieving: [{relief}]. Associated diaphoresis: [no]. Exertional: [no]. ECG if available: [not performed].',
+  'Palpitations':       'Palpitations — onset: {onset}. Regular / irregular. Duration of episodes. Associated pre-syncope: [no]. Triggers: []. Haemodynamic stability maintained.',
+  'Ankle swelling':     'Ankle / pedal oedema — unilateral / bilateral. Pitting: [yes/no]. Duration: {dur}. Painful: [no]. JVP: [not assessed]. Current medications: [{meds}].',
+  // GI
+  'Nausea':             'Nausea — onset: {onset}. Vomiting: [yes/no]. Frequency. Haematemesis: [no]. Associated abdominal pain: [no]. Able to tolerate oral fluids: [yes].',
+  'Vomiting':           'Vomiting — onset: {onset}. Frequency/day. Character: [bilious / food content / blood — no haematemesis]. Dehydration signs: [none identified]. Oral fluid tolerance: [reduced].',
+  'Abdominal pain':     'Abdominal pain — site: [RUQ / epigastric / LIF / generalised / periumbilical]. Onset: {onset}. Character: [{char}]. Radiation: [{rad}]. Severity: {sev}/10. Peritonism: [no guarding / no rebound]. Bowel sounds: [not assessed].',
+  'Diarrhoea':          'Diarrhoea — onset: {onset}. Frequency/day. Blood/mucus: [no]. Vomiting: [no]. Dehydration: [none evident]. Recent travel: [no]. Contacts affected: [no]. Duration: {dur}.',
+  'Constipation':       'Constipation — onset: {onset}. Duration: {dur}. Last bowel motion: []. Rectal bleeding: [no]. PR mucus: [no]. Diet / fluid intake assessed. Medication review: [{meds}].',
+  // UTI
+  'Dysuria/frequency':  'Lower urinary tract symptoms — dysuria: [yes]. Frequency: [yes]. Haematuria: [no visible]. Offensive odour: [yes/no]. Fever: [no]. Loin pain: [no]. Last UTI: []. Dipstick if done: [not done / positive for nitrites and leucocytes].',
+  // MSK
+  'Joint pain':         'Joint pain — site: [{char}]. Onset: {onset}. Swelling: [no]. Hot/erythematous: [no]. Range of movement: [limited]. Trauma: [no]. Gout history: [no].',
+  'Back pain':          'Back pain — site: [lumbar / thoracic / cervical]. Onset: {onset}. Radiation: [{rad}]. Character: [{char}]. Red flags screened: no saddle anaesthesia, no bladder/bowel dysfunction, no constitutional symptoms, no history of malignancy.',
+  // Skin
+  'Rash':               'Rash — distribution: []. Onset: {onset}. Character: [macular / papular / vesicular / pustular / urticarial]. Pruritic: [yes/no]. Fever: [no]. Recent new medications: []. Recent illness: [no]. Contact history: [no].',
+  'Wound / ulcer':      'Wound / ulcer — site. Dimensions. Depth. Base: [clean / sloughy / necrotic]. Surrounding skin: [erythema / cellulitis / none]. Exudate: [minimal / moderate / heavy]. Pain: {sev}/10. Odour: [no]. Healing: [progressing / static / deteriorating].',
+  // Mental health
+  'Low mood':           'Low mood — onset: {onset}. PHQ-9 score if available: [not done]. Anhedonia: [present / absent]. Sleep: [disturbed]. Appetite: [reduced / normal]. Concentration: [impaired]. Suicidal ideation screened: [denied]. Social functioning: [impaired].',
+  'Anxiety':            'Anxiety — onset: {onset}. GAD-7 score if available: [not done]. Panic attacks: [yes/no]. Avoidance behaviours: []. Impact on daily functioning: []. Suicidal ideation screened: [denied].',
+  // Constitutional
+  'Fever':              'Pyrexia — temperature: [__°C / not measured]. Duration: {dur}. Associated rigors: [no]. Source identified: []. Immunocompromised: [no]. Recent travel: [no]. Empirical antibiotic started: [no].',
+  'Weight loss':        'Weight loss — amount: [__ kg over __ weeks]. Intentional: [no]. Appetite: [reduced]. Night sweats: [no]. Fatigue: [yes]. Lymphadenopathy: [no]. ⚠️ CONSIDER MALIGNANCY SCREEN.',
+  'Fatigue':            'Fatigue — onset: {onset}. Duration: {dur}. Pattern: [constant / fluctuating]. Sleep quality: [disturbed / normal]. Mood: [low/normal]. Anaemia symptoms: [no pallor, no dyspnoea]. Thyroid symptoms: [no]. FBC and TFT consider.',
+};
+
+function prePopulateFreeText(sysKey, symLabel){
+  const el=document.getElementById('ft-'+sysKey);
+  if(!el)return;
+  const template=SYMPTOM_TEMPLATES[symLabel];
+  if(!template)return;
+  // Fill template tokens from current form values
+  const onset=(document.getElementById('pcOnset')&&document.getElementById('pcOnset').value)||'gradual';
+  const dur=v('pcDuration')||'not specified';
+  const sev=v('pcSeverity')||'?';
+  const char=v('pcChar')||'';
+  const rad=v('pcRad')||'nil';
+  const agg=v('pcAgg')||'';
+  const relief=v('pcRelief')||'';
+  const meds=v('ptMeds')||'none documented';
+  const filled=template
+    .replace(/{onset}/g,onset)
+    .replace(/{dur}/g,dur)
+    .replace(/{sev}/g,sev)
+    .replace(/{char}/g,char)
+    .replace(/{rad}/g,rad)
+    .replace(/{agg}/g,agg)
+    .replace(/{relief}/g,relief)
+    .replace(/{meds}/g,meds);
+  // Append to existing text rather than overwrite, if there's already content
+  if(el.value){
+    // Don't duplicate
+    if(!el.value.includes(filled.substring(0,20))){
+      el.value=(el.value+'\n'+filled).trim();
+    }
+  } else {
+    el.value=filled;
+  }
+  // Flash the field to indicate it was updated
+  el.style.borderColor='var(--info-border)';el.style.background='var(--info-bg)';
+  setTimeout(()=>{el.style.borderColor='';el.style.background='';},1000);
+}
+
 // ── NATION DEFAULTS ──
 function updateNationDefaults(){
   const nation=v('ptNation');
@@ -645,6 +1146,7 @@ function goStep(n){
   document.querySelectorAll('.step-tab').forEach((t,i)=>{t.classList.remove('active');if(i<n)t.classList.add('done');else t.classList.remove('done');});
   document.getElementById('step'+n).classList.add('visible');
   document.querySelectorAll('.step-tab')[n].classList.add('active');
+  if(n===3)updateGPSummary();
   if(n===4)populateRxEvidenceLinks();
   if(n===7){buildSBAR();buildSummary();}
 }
@@ -672,10 +1174,10 @@ function toggleDet(key){
 }
 function buildDet(sys){
   const det=document.getElementById('det-'+sys.key);
-  const symH=sys.symptoms.map((s,i)=>'<button class="cpill" data-key="'+sys.key+'" data-type="sym" data-idx="'+i+'">'+s+'</button>').join('');
+  const symH=sys.symptoms.map((s,i)=>'<button class="cpill" data-key="'+sys.key+'" data-type="sym" data-idx="'+i+'" title="Click to log symptom; double-click to also pre-fill text findings">'+s+'</button>').join('');
   const flH=sys.flags.map((f,i)=>'<button class="cpill" data-key="'+sys.key+'" data-type="flag" data-idx="'+i+'">'+f+'</button>').join('');
   const linkH=sys.links.map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" class="evlink evlink-'+l.t+'" title="'+l.title+'">'+l.l+' &#8599;</a>').join('');
-  det.innerHTML='<p class="slabel" style="margin-top:0">Symptoms noted</p><div class="checks-row">'+symH+'</div><p class="slabel">Red flags present</p><div class="checks-row">'+flH+'</div><div id="fd-'+sys.key+'"></div><div style="margin-top:7px"><label>Free text findings</label><textarea id="ft-'+sys.key+'" placeholder="Additional findings..."></textarea></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> '+sys.evidence+'<div class="evidence-links" style="margin-top:5px">'+linkH+'</div></div>';
+  det.innerHTML='<p class="slabel" style="margin-top:0">Symptoms noted <span style="font-size:10px;font-weight:400;color:var(--text3)">(click to select; re-click to deselect)</span></p><div class="checks-row">'+symH+'</div><p class="slabel">Red flags present</p><div class="checks-row">'+flH+'</div><div id="fd-'+sys.key+'"></div><div style="margin-top:7px"><label>Clinical findings &amp; examination notes <span style="font-size:10px;font-weight:400;color:var(--text3)">— click a symptom pill below to auto-suggest text</span></label><textarea id="ft-'+sys.key+'" placeholder="Type findings here, or click a symptom above to suggest text automatically...&#10;e.g. Otoscopy right: purulent discharge, 2mm central TM perforation, inflamed canal wall. Left ear normal. BP 132/82. Temp 36.8°C."></textarea><div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px" id="ftq-'+sys.key+'">'+sys.symptoms.map(s=>'<button onclick="prePopulateFreeText(\''+sys.key+'\',\''+s+'\')" style="font-size:10px;padding:2px 7px;border:0.5px solid var(--info-border);border-radius:10px;background:var(--info-bg);color:var(--info-text);cursor:pointer;font-family:inherit" title="Click to suggest text for: '+s+'">&#9998; '+s+'</button>').join('')+'</div></div><div class="alert-info" style="margin-top:7px"><strong>Evidence:</strong> '+sys.evidence+'<div class="evidence-links" style="margin-top:5px">'+linkH+'</div></div>';
   det.querySelectorAll('button.cpill').forEach(btn=>{
     btn.addEventListener('click',function(){
       const key=this.dataset.key,type=this.dataset.type,idx=parseInt(this.dataset.idx);
@@ -708,36 +1210,38 @@ function updateFlagSum(){
 // ── GP CONTACTS (FIXED) ──
 function saveContact(){
   const c={
-    name: (document.getElementById('gpName').value||'').trim(),
-    type: document.getElementById('gpType').value,
-    addr: (document.getElementById('gpAddr').value||'').trim(),
-    phone:(document.getElementById('gpPhone').value||'').trim(),
-    fax:  (document.getElementById('gpFax').value||'').trim(),
-    email:(document.getElementById('gpEmail').value||'').trim(),
+    name:(document.getElementById('gpNameExtra').value||'').trim(),
+    type:(document.getElementById('gpType').value||'GP'),
+    addr:(document.getElementById('gpAddrExtra').value||'').trim(),
+    phone:(document.getElementById('gpPhoneExtra').value||'').trim(),
+    fax:(document.getElementById('gpFaxExtra').value||'').trim(),
+    email:(document.getElementById('gpEmailExtra').value||'').trim(),
     notes:(document.getElementById('gpNotes').value||'').trim()
   };
-  if(!c.name){alert('Please enter a practice or contact name.');return;}
+  if(!c.name)return alert('Please enter a practice/service name');
   savedContacts.push(c);
-  renderSaved();
+  renderContacts();
   clearGPForm();
-  // Confirm to user
-  const area=document.getElementById('savedContactsArea');
-  area.style.background='var(--success-bg)';
-  setTimeout(()=>area.style.background='',1200);
 }
 function clearGPForm(){
-  ['gpName','gpAddr','gpPhone','gpFax','gpEmail','gpNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('gpType').value='GP';
+  ['gpNameExtra','gpAddrExtra','gpPhoneExtra','gpFaxExtra','gpEmailExtra','gpNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
 }
-function renderSaved(){
+function updateGPSummary(){
+  const nm=v('gpName')||'';const addr=v('gpAddr')||'';const phone=v('gpPhone')||'';
+  const el=document.getElementById('gpSummaryText');
+  if(!el)return;
+  if(nm){el.textContent=nm+(addr?' | '+addr:'')+(phone?' | '+phone:'');}
+  else{el.textContent='Not yet entered — go to Patient tab to search for GP surgery';}
+}
+function renderContacts(){
   const area=document.getElementById('savedContactsArea');
   const list=document.getElementById('savedContactsList');
-  if(!savedContacts.length){area.style.display='none';return;}
-  area.style.display='block';
+  if(!savedContacts.length){if(area)area.style.display='none';return;}
+  if(area)area.style.display='block';
   list.innerHTML=savedContacts.map((c,i)=>'<div class="saved-c '+(selContactIdx===i?'selected':'')+'" onclick="selContact('+i+')"><div><div class="cn">&#127968; '+c.name+' <span style="font-size:10px;font-weight:400;opacity:.7">('+c.type+')</span></div><div class="cd">'+[c.addr,c.phone?'Tel: '+c.phone:'',c.fax?'Fax: '+c.fax:'',c.email||''].filter(Boolean).join(' &middot; ')+'</div>'+(c.notes?'<div class="cd" style="font-style:italic">'+c.notes+'</div>':'')+'</div><button onclick="event.stopPropagation();rmContact('+i+')" style="font-size:11px;padding:2px 7px;border:0.5px solid var(--danger-border);border-radius:5px;background:var(--danger-bg);color:var(--danger-text);cursor:pointer;font-family:inherit;flex-shrink:0">Remove</button></div>').join('');
 }
-function selContact(i){selContactIdx=i;renderSaved();}
-function rmContact(i){savedContacts.splice(i,1);if(selContactIdx===i)selContactIdx=null;else if(selContactIdx>i)selContactIdx--;renderSaved();}
+function selContact(i){selContactIdx=i;renderContacts();}
+function rmContact(i){savedContacts.splice(i,1);if(selContactIdx===i)selContactIdx=null;else if(selContactIdx>i)selContactIdx--;renderContacts();}
 
 function toggleManualDir(){
   const row=document.getElementById('manualDirRow');
@@ -868,9 +1372,11 @@ function buildSBAR(){
   const NL='\n';
 
   const contact=selContactIdx!==null?savedContacts[selContactIdx]:null;
+  const gpName=v('gpName')||'';const gpAddr=v('gpAddr')||'';const gpPhone=v('gpPhone')||'';const gpFax=v('gpFax')||'';const gpEmailVal=v('gpEmail')||'';
+  const gpFromPatientTab=gpName?[gpName,gpAddr,gpPhone?'Tel: '+gpPhone:'',gpFax?'Fax: '+gpFax:'',gpEmailVal].filter(Boolean).join('  |  '):'';
   const gpLine=contact
     ?contact.name+'  |  '+[contact.addr,contact.phone?'Tel: '+contact.phone:'',contact.fax?'Fax: '+contact.fax:'',contact.email||''].filter(Boolean).join('  |  ')
-    :'[GP practice not selected — add and select a contact in the GP/Refs tab]';
+    :gpFromPatientTab||'[GP practice not entered — use patient tab to search]';
 
   const flagLines=[];
   SYSTEMS.forEach(s=>{
@@ -1016,7 +1522,9 @@ function downloadTool(){
 function buildRTFData(){
   // Gather all consultation fields into a data object for RTF generation
   const contact=selContactIdx!==null?savedContacts[selContactIdx]:null;
-  const gpLine=contact?contact.name+(contact.addr?' | '+contact.addr:'')+(contact.phone?' | Tel: '+contact.phone:'')+(contact.fax?' | Fax: '+contact.fax:'')+(contact.email?' | '+contact.email:''):'[GP practice not selected]';
+  const _gpn=v('gpName')||'';const _gpa=v('gpAddr')||'';const _gpp=v('gpPhone')||'';const _gpf=v('gpFax')||'';const _gpe=v('gpEmail')||'';
+  const _gpBase=_gpn?[_gpn,_gpa,_gpp?'Tel: '+_gpp:'',_gpf?'Fax: '+_gpf:'',_gpe].filter(Boolean).join(' | '):'';
+  const gpLine=contact?contact.name+(contact.addr?' | '+contact.addr:'')+(contact.phone?' | Tel: '+contact.phone:'')+(contact.fax?' | Fax: '+contact.fax:'')+(contact.email?' | '+contact.email:''):_gpBase||'[GP practice not entered]';
   const flagLines=[];
   SYSTEMS.forEach(s=>{
     const fl=selFlag[s.key]||[];const sy=selSym[s.key]||[];const ft=v('ft-'+s.key);
@@ -1036,6 +1544,9 @@ function buildRTFData(){
     ptNHS:v('ptNHS')||'[NHS no.]',
     ptSex:v('ptSex')||'',
     ptPostcode:v('ptPostcode')||'',
+    ptAddress:v('ptAddress')||'',
+    ptPhone:v('ptPhone')||'',
+    ptEmail:v('ptEmail')||'',
     allergies:v('ptAllergies')||'NKDA',
     pmh:v('ptPMH')||'None recorded',
     meds:v('ptMeds')||'Not recorded',
@@ -1132,7 +1643,9 @@ function makeRTF(D){
   // ── S: SITUATION ──
   r+='{\\pard\\f0\\fs26\\b\\cf1 [S] SITUATION\\b0\\cf0\\par}'+NL;
   function row(lbl,val){return '{\\pard\\f0\\fs18 {\\b\\cf1 '+esc(lbl)+': }\\cf0 '+esc(val)+'\\par}'+NL;}
-  r+=row('Patient',D.ptName+'   DOB: '+D.ptDob+'   Sex: '+D.ptSex+'   Postcode: '+D.ptPostcode);
+  r+=row('Patient',D.ptName+'   DOB: '+D.ptDob+'   Sex: '+D.ptSex);
+  r+=row('Address',(D.ptAddress||D.ptPostcode||'[not entered]'));
+  if(D.ptPhone||D.ptEmail)r+=row('Patient contact',[D.ptPhone?'Tel: '+D.ptPhone:'',D.ptEmail||''].filter(Boolean).join('   |   '));
   r+=row('NHS Number',D.ptNHS);
   r+='{\\pard\\f0\\fs18 {\\b\\cf6 Allergies/ADRs: }\\cf6 *** '+esc(D.allergies)+' ***\\cf0\\par}'+NL;
   r+=row('Receiving GP',D.gp);
@@ -1249,6 +1762,9 @@ function loadTestScenario(){
   document.getElementById('ptNHS').value='485 673 2910';
   document.getElementById('ptSex').value='Female';
   document.getElementById('ptPostcode').value='N14 6HT';
+  // ptAddress intentionally blank — use postcode lookup button to test
+  document.getElementById('ptPhone').value='07700 900123';
+  document.getElementById('ptEmail').value='sarah.mitchell@email.com';
   document.getElementById('ptAllergies').value='Penicillin (urticaria)';
   document.getElementById('ptPMH').value='Recurrent otitis externa (3 episodes past 18 months), T2DM (diet-controlled), Hypertension (Amlodipine 5mg OD)';
   document.getElementById('ptMeds').value='Amlodipine 5mg OD\nMetformin 500mg BD\nCetirizine 10mg PRN';
@@ -1257,27 +1773,12 @@ function loadTestScenario(){
   document.getElementById('ipScope').value='Minor ailments, ENT, Dermatology, Hypertension';
   document.getElementById('pharmName').value='Northgate Community Pharmacy';
   document.getElementById('pharmPhone').value='020 8362 4400 / FT284';
-  document.getElementById('pcMain').value="Patient presents with 4-day history of right-sided otalgia and purulent discharge. Known perforated tympanic membrane (right side, confirmed by ENT 8 months ago, not fully healed). Concerned the infection is worsening.";
-  document.getElementById('pcDuration').value='4 days';
-  document.getElementById('pcOnset').value='Gradual';
-  document.getElementById('pcSeverity').value='7';
-  document.getElementById('pcChar').value='Throbbing otalgia, purulent yellow-green discharge';
-  document.getElementById('pcRad').value='No radiation';
-  document.getElementById('pcAgg').value='Touching ear, water exposure';
-  document.getElementById('pcRelief').value='Paracetamol — partial relief only';
-  document.getElementById('pcAssoc').value='Mild conductive hearing loss (right), no fever, no facial nerve involvement, no mastoid tenderness';
-  document.getElementById('pcPrev').value='OTC olive oil drops — no benefit. No antibiotics in past 6 months.';
-  document.getElementById('pcICE').value='Ideas: thinks it is another ear infection like before.\nConcerns: worried about permanent hearing loss if untreated.\nExpectations: antibiotic ear drops, similar to what ENT previously prescribed.';
-  document.getElementById('pcSmoke').value='Never smoked';
-  document.getElementById('pcAlc').value='<5 units/week';
   document.getElementById('gpName').value='Southgate Medical Centre';
-  document.getElementById('gpType').value='GP';
   document.getElementById('gpAddr').value='22 The Bourne, Southgate, London N14 6RA';
   document.getElementById('gpPhone').value='020 8882 1100';
   document.getElementById('gpFax').value='020 8882 1101';
   document.getElementById('gpEmail').value='southgatemedical.N14@nhs.net';
-  document.getElementById('gpNotes').value='Phone triage 9am-1pm Mon-Fri | refer via ICE';
-  saveContact();
+  updateGPSummary();
   document.getElementById('rxDrug').value='Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops';
   document.getElementById('rxIndication').value='Otitis media/externa with perforated tympanic membrane (non-ototoxic option)';
   document.getElementById('rxDose').value='4 drops';
