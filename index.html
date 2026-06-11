@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff" id="themeColorMeta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="IP Tool">
+<link rel="manifest" href="manifest.json">
 <title>IP Consultation Tool v3.0 — Community Pharmacy</title>
 <style>
 :root{
@@ -15,6 +20,16 @@
   --purple-bg:#eeedfe;--purple-border:#afa9ec;--purple-text:#3c3489;
   --teal-bg:#e1f5ee;--teal-border:#5dcaa5;--teal-text:#085041;
   --radius:8px;--radius-lg:12px;
+}
+[data-theme="dark"]{
+  --bg:#1a1a1e;--bg2:#242428;--bg3:#131316;--border:#38383e;--border2:#4a4a52;
+  --text:#e8e8e4;--text2:#a8a8a2;--text3:#68686a;
+  --info-bg:#0d2340;--info-border:#1a4a7c;--info-text:#7ab8f5;
+  --danger-bg:#2d1515;--danger-border:#6b2020;--danger-text:#f08080;
+  --success-bg:#132310;--success-border:#2a5018;--success-text:#8dc870;
+  --warning-bg:#2a1e08;--warning-border:#7a4a08;--warning-text:#f0b860;
+  --purple-bg:#1e1a40;--purple-border:#4a40a0;--purple-text:#b0a8f8;
+  --teal-bg:#082820;--teal-border:#1a7058;--teal-text:#60c8a8;
 }
 .obs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:10px}
 .obs-cell{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 10px;display:flex;flex-direction:column;gap:3px}
@@ -132,6 +147,14 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 .evlink-nice{background:#1d3f7c;color:#fff}
 .evlink-bnf{background:#2e7d32;color:#fff}
 .evlink-cks{background:#00838f;color:#fff}
+.evlink-smc{background:#6a1b9a;color:#fff}
+.evlink-purple{background:#512da8;color:#fff}
+.evlink-info{background:#0277bd;color:#fff}
+.pgd-link{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--success-text);text-decoration:none;transition:opacity .15s}
+.pgd-link:hover{opacity:.85}
+.assess-link{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--info-text);text-decoration:none;transition:opacity .15s}
+.assess-link:hover{opacity:.85}
+.pgd-exp{font-size:10px;font-weight:400;opacity:.8;margin-left:auto;white-space:nowrap}
 .evlink-gb{background:#e65100;color:#fff}
 .evlink-emc{background:#6a1b9a;color:#fff}
 .evlink-pubmed{background:#555;color:#fff}
@@ -183,20 +206,23 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   <div>
     <h1>&#x2695;&#xFE0F; IP Consultation Tool</h1>
     <p>Community Pharmacy &mdash; Independent Prescriber Clinical Assessment &amp; SBAR Generator</p>
+    <p style="font-size:10px;color:var(--text3);margin-top:3px">Created by <strong>Adam Croke</strong> — GPhC-registered Pharmacist, Glasgow, Scotland</p>
   </div>
-  <div style="display:flex;gap:6px;flex-shrink:0">
+  <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+    <button id="pwaInstallBtn" onclick="installPWA()" title="Install as app on your device" style="display:none;font-size:11px;padding:4px 9px;border:0.5px solid var(--success-border);border-radius:var(--radius);background:var(--success-bg);color:var(--success-text);cursor:pointer;font-weight:600;font-family:inherit">📲 Install app</button>
+    <button onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle dark mode" style="font-size:14px;padding:4px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg2);cursor:pointer;line-height:1">🌙</button>
     <span class="badge badge-success">v3.0</span>
     <span class="badge badge-info">Offline-ready</span>
   </div>
 </div>
 
-<div class="disclaimer-banner">
-  <span class="db-icon">⚠️</span>
-  <span><strong>Clinical AI Disclaimer:</strong> This tool is an AI-assisted clinical documentation aid for use by GPhC-registered independent prescribers only. It does not constitute medical advice and must not override clinical judgement. The prescriber remains solely and professionally responsible for all clinical decisions, diagnoses and prescriptions. All formulary data, evidence links and drug information must be verified at source (BNF, NICE, SMC, eMC SPC) before prescribing. In an emergency always call 999.</span>
-</div>
-
-<div class="info-bar">
-  &#128218; Evidence links open NICE, NICE CKS, BNF, Green Book and eMC directly. Always verify at source. The AI clinical judgement assistant uses the Anthropic API &mdash; requires internet. All other features work fully offline.
+<div class="info-bar" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+  <span>&#128218; Evidence links open NICE, NICE CKS, BNF, eMC directly. Always verify at source before prescribing. Drug interaction and allergy checks are clinical aids — always apply independent clinical judgement.</span>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <span style="font-size:11px;color:var(--teal-text);font-weight:600">&#9201;</span>
+    <span id="consultTimer" style="font-size:13px;font-weight:700;color:var(--teal-text);min-width:42px;font-variant-numeric:tabular-nums">00:00</span>
+    <button onclick="resetConsultTimer()" title="Reset timer" style="font-size:10px;padding:1px 7px;border:0.5px solid var(--teal-border);border-radius:6px;background:var(--teal-bg);color:var(--teal-text);cursor:pointer;font-family:inherit">Reset</button>
+  </div>
 </div>
 
 <div class="step-tabs" id="stepTabs">
@@ -206,8 +232,9 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   <button class="step-tab" data-step="3"><span class="ti">&#127968;</span>GP / Refs</button>
   <button class="step-tab" data-step="4"><span class="ti">&#128138;</span>Prescription</button>
   <button class="step-tab" data-step="5"><span class="ti">&#127807;</span>Outcome</button>
-  <button class="step-tab" data-step="6"><span class="ti">&#129504;</span>CJ Assist</button>
-  <button class="step-tab" data-step="7"><span class="ti">&#128196;</span>SBAR</button>
+  <button class="step-tab" data-step="6"><span class="ti">&#128221;</span>Reasoning</button>
+  <button class="step-tab" data-step="7"><span class="ti">🏴󠁧󠁢󠁳󠁣󠁴󠁿</span>PGDs</button>
+  <button class="step-tab" data-step="8"><span class="ti">&#128196;</span>SBAR</button>
 </div>
 
 <!-- CONSULTATION PROGRESS BAR -->
@@ -746,7 +773,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   </div>
 
   <div class="g2">
-    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops"></div>
+    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops" oninput="updateRxSafetyLinks();updateProgressBar()"></div>
     <div><label>Indication</label><input id="rxIndication" type="text" placeholder="e.g. Otitis externa with perforated tympanic membrane"></div>
   </div>
   <div class="g4">
@@ -799,9 +826,21 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <button class="btn" id="manualDirBtn" onclick="toggleManualDir()" style="font-size:11px;background:var(--warning-bg);color:var(--warning-text);border-color:var(--warning-border)">&#9998; Override prescription directions manually</button>
     <span style="font-size:11px;color:var(--text3);margin-left:8px">Use when auto-filled directions need to be changed or when a non-standard instruction is required</span>
   </div>
-  <div class="g1"><div><label>Drug interactions checked / monitoring required</label><textarea id="rxInteractions" placeholder="e.g. No significant interactions identified (BNF interactions checker). No monitoring required for this course." style="min-height:52px"></textarea></div></div>
+  <div class="g1"><div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <label style="margin:0">Drug interactions checked / monitoring required</label>
+      <button onclick="markNoInteractions()" class="btn" style="font-size:11px;padding:3px 10px;background:var(--success-bg);color:var(--success-text);border-color:var(--success-border)" title="Mark as checked — no significant interactions found">&#10003; No interactions found</button>
+    </div>
+    <textarea id="rxInteractions" placeholder="e.g. No significant interactions identified (BNF interactions checker). No monitoring required for this course." style="min-height:52px"></textarea>
+  </div></div>
+
+  <!-- INTERACTION & ALLERGY CHECKER -->
+  <div id="safetyChecksPanel" style="display:none;margin-top:8px"></div>
   <div style="margin-top:8px">
-    <p class="slabel">Evidence &amp; prescribing references</p>
+    <div id="rxSafetyLinks" style="margin-bottom:8px;padding:10px 12px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius)">
+      <div style="font-size:11px;color:var(--text3)">Enter a drug name above to get direct BNF interaction checker and SPS links</div>
+    </div>
+    <p class="slabel">General prescribing references</p>
     <div class="evidence-links" id="rxEvidenceLinks"></div>
   </div>
 </div>
@@ -844,52 +883,300 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <div id="outcomeLinksContent"></div>
   </div>
 </div>
-<div class="nav-row no-print"><button class="btn" onclick="goStep(4)">&#8592; Back</button><button class="btn btn-primary" onclick="goStep(6)">Clinical judgement assist &#8594;</button></div>
+<div class="nav-row no-print"><button class="btn" onclick="goStep(4)">&#8592; Back</button><button class="btn btn-primary" onclick="goStep(6)">Next: clinical reasoning &#8594;</button></div>
 </div>
 
-<!-- STEP 6: CJ ASSIST -->
+<!-- STEP 6: CLINICAL REASONING SCRATCHPAD -->
 <div id="step6" class="step-panel">
-<div class="cj-box">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-    <span style="font-size:24px">&#129504;</span>
-    <h2 style="color:var(--purple-text);margin:0">Clinical judgement assistant</h2>
-    <span class="pill pill-purple">AI-powered</span>
-  </div>
-  <p style="font-size:12px;color:var(--purple-text);margin-bottom:10px;line-height:1.6">Ask anything &mdash; prescribing decisions, scope of practice, referral justification, drug interactions, off-label use, evidence appraisal. Uses your consultation context plus current UK clinical evidence.</p>
-  <div class="alert-warning" style="margin-bottom:10px;font-size:12px">
-    <strong>&#9888; Internet required &mdash; use the downloaded file:</strong> The AI assistant calls the Anthropic API directly from your browser. This works when you open the downloaded <strong>IP_Consultation_Tool_v2.html</strong> file locally. It will not work inside the Claude.ai preview panel due to browser security restrictions on that page. Download the file and open it in Chrome, Edge or Firefox.
-  </div>
-  <div class="alert-purple" style="margin-bottom:10px;font-size:12px">
-    <strong>&#128218; Example questions:</strong><br>
-    &bull; "Is it within my IP scope to prescribe ciprofloxacin/dexamethasone ear drops with a perforated tympanic membrane?"<br>
-    &bull; "What NICE NG12 criteria apply to this presentation?"<br>
-    &bull; "Is there a drug interaction between [X] and [Y] in this patient?"<br>
-    &bull; "Should I refer to GP or manage in community — justify the decision?"<br>
-    &bull; "What is the evidence for [drug] in [condition] in a patient with [PMH]?"
-  </div>
-  <div style="display:flex;gap:8px;align-items:flex-end">
-    <textarea id="cjQuestion" style="flex:1;min-height:52px;border-color:var(--purple-border);background:var(--bg)" placeholder="Type your clinical question here..."></textarea>
-    <button class="btn btn-purple" onclick="askCJ()" style="height:52px;white-space:nowrap;align-self:flex-end">Ask &#8594;</button>
-  </div>
-  <div id="cjResponse" style="display:none">
-    <div class="cj-response" id="cjResponseContent"></div>
-    <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap">
-      <button class="btn btn-purple" onclick="appendCJToReasoning()" style="font-size:11px">&#128196; Add to clinical reasoning</button>
-      <button class="btn" onclick="clearCJ()" style="font-size:11px">Clear</button>
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:20px">&#128221;</span>
+      <h2 style="margin:0">Clinical reasoning</h2>
+    </div>
+    <div style="display:flex;gap:5px">
+      <button onclick="autoGenerateReasoning()" class="btn" style="font-size:11px;padding:4px 12px;background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border);font-weight:700">&#9889; Auto-generate</button>
+      <button onclick="compileReasoning()" class="btn" style="font-size:11px;padding:4px 10px">&#9654; Compile notes</button>
     </div>
   </div>
-  <div id="cjHistory" style="margin-top:10px"></div>
+  <p style="font-size:11px;color:var(--text3);margin-bottom:10px">Document your clinical justification here — populates the SBAR Assessment section. Use the structured notes below to build your reasoning, or type directly into the log.</p>
+
+  <!-- Structured notes — collapsible sections -->
+  <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px">
+
+    <!-- Diagnosis rationale -->
+    <div onclick="toggleReasoningSection('rsDx')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg2);cursor:pointer;border-bottom:0.5px solid var(--border);user-select:none">
+      <span style="font-size:12px;font-weight:600">📋 Diagnosis rationale</span>
+      <span id="rsDx-arrow" style="font-size:10px;color:var(--text3)">▼</span>
+    </div>
+    <div id="rsDx-body" style="display:none;padding:8px 10px;border-bottom:0.5px solid var(--border)">
+      <textarea id="reasoningDiagnosis" placeholder="Why this diagnosis? What clinical features support it? What did you examine? What did you exclude?" style="min-height:70px;font-size:12px"></textarea>
+    </div>
+
+    <!-- Evidence base -->
+    <div onclick="toggleReasoningSection('rsEv')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg2);cursor:pointer;border-bottom:0.5px solid var(--border);user-select:none">
+      <span style="font-size:12px;font-weight:600">📚 Evidence base</span>
+      <span id="rsEv-arrow" style="font-size:10px;color:var(--text3)">▼</span>
+    </div>
+    <div id="rsEv-body" style="display:none;padding:8px 10px;border-bottom:0.5px solid var(--border)">
+      <textarea id="reasoningEvidence" placeholder="NICE CKS / BNF / SMC / SIGN reference for this prescribing decision. e.g. NICE CKS Otitis Externa (May 2024): acetic acid 2% first-line. BNF 12.1.1." style="min-height:70px;font-size:12px"></textarea>
+    </div>
+
+    <!-- Alternatives considered -->
+    <div onclick="toggleReasoningSection('rsAlt')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg2);cursor:pointer;border-bottom:0.5px solid var(--border);user-select:none">
+      <span style="font-size:12px;font-weight:600">🔄 Alternatives considered</span>
+      <span id="rsAlt-arrow" style="font-size:10px;color:var(--text3)">▼</span>
+    </div>
+    <div id="rsAlt-body" style="display:none;padding:8px 10px;border-bottom:0.5px solid var(--border)">
+      <textarea id="reasoningAlternatives" placeholder="What other treatments did you consider? Why were they excluded?" style="min-height:70px;font-size:12px"></textarea>
+    </div>
+
+    <!-- Interactions & safety -->
+    <div onclick="toggleReasoningSection('rsInt')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg2);cursor:pointer;border-bottom:0.5px solid var(--border);user-select:none">
+      <span style="font-size:12px;font-weight:600">⚠ Interactions &amp; safety</span>
+      <span id="rsInt-arrow" style="font-size:10px;color:var(--text3)">▼</span>
+    </div>
+    <div id="rsInt-body" style="display:none;padding:8px 10px;border-bottom:0.5px solid var(--border)">
+      <textarea id="reasoningInteractions" placeholder="Drug interactions checked. Allergy confirmed. Renal / hepatic / pregnancy considerations." style="min-height:70px;font-size:12px"></textarea>
+    </div>
+
+    <!-- Consent & counselling -->
+    <div onclick="toggleReasoningSection('rsCons')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg2);cursor:pointer;user-select:none">
+      <span style="font-size:12px;font-weight:600">✅ Consent &amp; counselling</span>
+      <span id="rsCons-arrow" style="font-size:10px;color:var(--text3)">▼</span>
+    </div>
+    <div id="rsCons-body" style="display:none;padding:8px 10px">
+      <textarea id="reasoningConsent" placeholder="Diagnosis and treatment explained. PIL supplied. Patient questions answered. Verbal consent given." style="min-height:70px;font-size:12px"></textarea>
+    </div>
+
+  </div>
+
+  <!-- Main reasoning log -->
+  <div>
+    <label style="font-weight:700">Full clinical reasoning log <span style="font-size:10px;color:var(--text3);font-weight:400">— goes into the SBAR</span></label>
+    <textarea id="clinicalReasoning" placeholder="Auto-generate pulls from the whole consultation. Compile pulls the structured notes above. Or type freely here." style="min-height:110px"></textarea>
+  </div>
+
+  <!-- Evidence links — compact -->
+  <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">
+    <a href="https://bnf.nice.org.uk" target="_blank" rel="noopener" class="evlink evlink-bnf">BNF &#8599;</a>
+    <a href="https://bnf.nice.org.uk/interactions/" target="_blank" rel="noopener" class="evlink evlink-bnf">BNF Interactions &#8599;</a>
+    <a href="https://www.medicinescomplete.com/#/search/stockley/" target="_blank" rel="noopener" class="evlink evlink-purple">Stockley's &#8599;</a>
+    <a href="https://cks.nice.org.uk" target="_blank" rel="noopener" class="evlink evlink-nice">NICE CKS &#8599;</a>
+    <a href="https://www.nice.org.uk/guidance" target="_blank" rel="noopener" class="evlink evlink-nice">NICE Guidelines &#8599;</a>
+    <a href="https://www.medicines.org.uk/emc" target="_blank" rel="noopener" class="evlink evlink-cks">eMC SPC &#8599;</a>
+    <a href="https://www.sps.nhs.uk/" target="_blank" rel="noopener" class="evlink evlink-info">SPS &#8599;</a>
+    <a href="https://www.smc.scot.nhs.uk" target="_blank" rel="noopener" class="evlink evlink-smc">SMC &#8599;</a>
+    <a href="https://rightdecisions.scot.nhs.uk" target="_blank" rel="noopener" class="evlink evlink-nice">Right Decisions Scotland &#8599;</a>
+    <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" rel="noopener" class="evlink evlink-bnf">PubMed &#8599;</a>
+  </div>
 </div>
-<div class="card">
-  <h2>&#128221; IP clinical reasoning log</h2>
-  <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Document your IP prescribing justification here. This populates the SBAR assessment section and creates an auditable record for IP governance. Reference NICE, CKS, BNF, eMC SPCs and published evidence.</p>
-  <div class="g1"><div><label>Clinical reasoning &amp; justification for prescribing decision / referral pathway</label><textarea id="clinicalReasoning" placeholder="e.g. Patient has confirmed perforated TM (right side, central, documented in ENT correspondence). Aminoglycosides contraindicated due to ototoxicity risk with perforation (NICE CKS Otitis Externa, May 2024; BNF 12.1.1). Ciprofloxacin 0.3%/dexamethasone 0.1% ear drops prescribed as non-ototoxic option, consistent with NICE CKS, local formulary and eMC SPC. Dexamethasone may delay TM healing (PMID 20010446) — discussed with patient; clinical benefit outweighs risk. No significant drug interactions identified. Within IP scope (ENT annotation). SBAR sent to GP for awareness per IP prescribing governance." style="min-height:120px"></textarea></div></div>
+<div class="nav-row no-print">
+  <button class="btn" onclick="goStep(5)">&#8592; Back</button>
+  <button class="btn" onclick="goStep(7)" style="background:var(--bg2);color:var(--text3);border-color:var(--border2)">&#127981; View PGDs &amp; Assessment Forms</button>
+  <button class="btn btn-primary" onclick="goStep(8)">Skip PGD section — Generate SBAR &#8594;</button>
 </div>
-<div class="nav-row no-print"><button class="btn" onclick="goStep(5)">&#8592; Back</button><button class="btn btn-primary" onclick="goStep(7)">Generate SBAR &#8594;</button></div>
 </div>
 
-<!-- STEP 7: SBAR -->
+<!-- STEP 7: PFS SCOTLAND PGDs & ASSESSMENT FORMS -->
 <div id="step7" class="step-panel">
+<div class="card">
+  <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+    <span style="font-size:26px;line-height:1">🏴󠁧󠁢󠁳󠁣󠁴󠁿</span>
+    <div>
+      <h2 style="margin:0 0 2px">NHS Pharmacy First Scotland — PGDs &amp; Assessment Forms</h2>
+      <p style="font-size:11px;color:var(--text2);margin:0">Source: NHS Greater Glasgow &amp; Clyde Community Pharmacy · <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/pages/patient-group-directions-pgds/" target="_blank" rel="noopener" style="color:var(--info-text)">communitypharmacy.scot.nhs.uk ↗</a> · Last updated June 2026</p>
+    </div>
+  </div>
+
+  <div class="alert-warning" style="font-size:12px;margin-bottom:14px">
+    <strong>⚠ Important:</strong> Every pharmacist must sign an individual copy of each PGD <strong>before</strong> undertaking the associated service. Signed PGDs must be retained in the pharmacy for <strong>8 years</strong> from the effective date. From 1 April 2026, NHSGGC no longer requires submission of signed authorisation sheets — signing the PGD itself is sufficient. Always verify current versions with your Health Board.
+  </div>
+
+  <!-- ── NHS SCOTLAND PHARMACY FIRST SERVICE (PFS) ── -->
+  <div style="margin-bottom:20px">
+    <div style="background:var(--info-bg);border:1.5px solid var(--info-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--info-text);margin-bottom:2px">🏴󠁧󠁢󠁳󠁣󠁴󠁿 NHS Scotland Pharmacy First Service (PFS)</div>
+      <div style="font-size:11px;color:var(--info-text)">Pharmacy First Scotland PGDs — valid across all 14 Scottish Health Boards (subject to local Board authorisation)</div>
+    </div>
+
+    <!-- Hay Fever -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🌸 Hay Fever / Allergic Rhinitis &amp; Eye Conditions</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Beclometasone-v2-exp-May-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Beclometasone 50μg Nasal Spray v2 <span class="pgd-exp">exp May 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Fexofenadine-v2-exp-May-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Fexofenadine 120mg Tablets v2 <span class="pgd-exp">exp May 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Mometasone-v2-exp-May-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Mometasone Furoate 50μg Nasal Spray v2 <span class="pgd-exp">exp May 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Olopatadine-v2-exp-May-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Olopatadine 1mg/ml Eye Drops v2 <span class="pgd-exp">exp May 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PFS-Hay-Fever-Pt-Assess-Form-v2-May-26.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Hay Fever v2</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Oral Thrush -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🫦 Oral Thrush (Candidiasis)</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-Nystatin-v1-exp-Mar-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Nystatin Oral Suspension v1 <span class="pgd-exp">exp Mar 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-Nystatin-v1-exp-Mar-29-Patient-Assessment-Form.pdf" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Nystatin v1</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impetigo -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🩹 Impetigo</div>
+      <div style="padding:10px 14px">
+        <div style="margin-bottom:6px;font-size:11px;color:var(--text3)">Age ≥1 year · Localised (≤4 lesion clusters) · Exclude: pregnant &lt;16, bullous impetigo, recurrent (≥2 in 12 months), immunosuppressed, widespread infection</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Fusidic-Acid-2-Cream-v3-exp-Aug-28.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Fusidic Acid 2% Cream v3 <span class="pgd-exp">exp Aug 2028</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Impetigo-Pt-Assessment-Form-v3-Aug-27.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Impetigo v3</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- UTI -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🫘 Urinary Tract Infection (UTI)</div>
+      <div style="padding:10px 14px">
+        <div style="margin-bottom:6px;font-size:11px;color:var(--text3)">Women aged 16–64 · Uncomplicated lower UTI only · Exclude: male, pregnant, breastfeeding, catheter, recurrent UTI (≥2 in 6 months or ≥3 in 12 months), symptoms &gt;7 days, loin pain/fever (→ pyelonephritis)</div>
+        <div style="margin-bottom:6px;font-size:11px;color:var(--warning-text);font-weight:600">⚠ Antibiotic choice varies by Health Board — check your Board's current guidance. Tayside: Nitrofurantoin 1st line (if test results available). All other Boards: Trimethoprim 1st line.</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Nitrofurantoin-v3-exp-Aug-28.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Nitrofurantoin v3 <span class="pgd-exp">exp Aug 2028</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Trimethoprim-v3-exp-Aug-28.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Trimethoprim v3 <span class="pgd-exp">exp Aug 2028</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-UTI-Pt-Assessment-Form-v3-Aug-27.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — UTI v3</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shingles -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">⚡ Shingles (Herpes Zoster)</div>
+      <div style="padding:10px 14px">
+        <div style="margin-bottom:6px;font-size:11px;color:var(--text3)">Age ≥18 years · Present within 72 hours of rash onset (or active blistering) · Exclude: pregnant or suspected pregnancy, breastfeeding with shingles on breast, ophthalmic involvement (→ refer), immunosuppressed, Ramsay Hunt syndrome</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/media/8845/pgd-aciclovir-800mg-v2-exp-feb-27.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Aciclovir 800mg v2 <span class="pgd-exp">exp Feb 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/media/8844/aciclovir-pt-assess-form-v2-feb-24.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Aciclovir (Shingles) v2</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skin Infections -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🔴 Bacterial Skin Infections (Infected Insect Bites / Cellulitis)</div>
+      <div style="padding:10px 14px">
+        <div style="margin-bottom:6px;font-size:11px;color:var(--text3)">Age ≥1 year · Infection present or worsening ≥48 hours after bite/sting · Localised infection · Exclude: pregnant &lt;16, widespread infection, immunosuppressed, allergy to flucloxacillin / penicillin</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/media/8846/pgd-flucloxacillin-v2-exp-feb-27.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Flucloxacillin v2 <span class="pgd-exp">exp Feb 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/media/8847/flucloxacillin-pt-assess-form-v2-feb-24.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Flucloxacillin v2</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allergy / Itch / Eczema -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🩹 Skin Inflammation / Allergy / Itch (Eczema)</div>
+      <div style="padding:10px 14px">
+        <div style="margin-bottom:6px;font-size:11px;color:var(--text3)">Hydrocortisone 1% — mild topical steroid for inflammatory skin conditions · Emollients vary by Health Board (see approved list section 10.1)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-PF-Hydrocortisone-PGD-v1-exp-Jan-29.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Hydrocortisone 1% Cream/Ointment v1 <span class="pgd-exp">exp Jan 2029</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PFS-Hydrocortisone-Pt-Assess-GP-Notification-Form-v1.1-Jan-26.docx" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment &amp; GP Notification Form — Hydrocortisone v1.1</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NHS SCOTLAND UNSCHEDULED CARE ── -->
+  <div style="margin-bottom:20px">
+    <div style="background:var(--success-bg);border:1.5px solid var(--success-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--success-text);margin-bottom:2px">🚑 NHS Scotland — Unscheduled Care</div>
+      <div style="font-size:11px;color:var(--success-text)">Out-of-hours emergency supply PGD — valid across NHS Scotland</div>
+    </div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">⚕️ Unscheduled Care v32</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-v32-July-2025.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Unscheduled Care v32 <span class="pgd-exp">exp Oct 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/Authorisation-Form-v32-July-2025.pdf" target="_blank" rel="noopener" class="assess-link">📋 Authorisation Sheet v32</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/Whats-New-V32-July-2025.pdf" target="_blank" rel="noopener" class="assess-link">📋 What's New — v32</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-Unscheduled-Care-Medicines-A-Z-Look-up-List-v2.2-Apr-26.pdf" target="_blank" rel="noopener" class="assess-link">📋 Medicines A–Z Look-up List v2.2 (Apr 2026)</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/Direct-Referral-Prof-to-Prof-contact-numbers-v32-July-2025.pdf" target="_blank" rel="noopener" class="assess-link">📋 Direct Referral Contact Numbers v32</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NHSGGC PHARMACY PUBLIC HEALTH SERVICE ── -->
+  <div style="margin-bottom:20px">
+    <div style="background:var(--purple-bg);border:1.5px solid var(--purple-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--purple-text);margin-bottom:2px">💊 NHSGGC Pharmacy Public Health Service (PHS)</div>
+      <div style="font-size:11px;color:var(--purple-text)">NHS Greater Glasgow &amp; Clyde local public health pharmacy services</div>
+    </div>
+
+    <!-- EHC -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🩺 Emergency Hormonal Contraception (EHC) v13</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/Levonorgestrel-v13-exp-Aug-27.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Levonorgestrel v13 <span class="pgd-exp">exp Aug 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/media/5466/flowchart-and-proforma-v1-apr-22.docx" target="_blank" rel="noopener" class="assess-link">📋 EHC Patient Assessment Proforma &amp; Flowchart v1</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bridging Contraception -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">💊 Bridging Contraception — Progesterone Only Pill v2</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PHS-Bridging-Contraception-Desogestrel-PGD-v2.0-Aug-2024.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Desogestrel (Bridging Contraception) v2 <span class="pgd-exp">exp Sept 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PHS-Bridging-Contraception-Desogestrel-PGD-GP-notification-form-v2.0.docx" target="_blank" rel="noopener" class="assess-link">📋 GP Notification Form v2</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PHS-Combined-EHC-BC-template-Once-for-Scotland-v1.docx" target="_blank" rel="noopener" class="assess-link">📋 Combined EHC &amp; Bridging Contraception Assessment Form v1</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PHS-Supporting-guidance-for-EHC-and-Bridging-Contraception-v1.pdf" target="_blank" rel="noopener" class="assess-link">📋 Supporting Guidance — EHC &amp; Bridging Contraception v1</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Varenicline -->
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:8px">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">🚭 Varenicline (Smoking Cessation) v1</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-Varenicline-tablets-Version-1.0-April-2025.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Varenicline Tablets v1 <span class="pgd-exp">exp Apr 2028</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/Assessment-Form-Version-1.0-April-2025.pdf" target="_blank" rel="noopener" class="assess-link">📋 Patient Assessment Form — Varenicline v1</a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/NHS-Circular-PCAP2025-06-10-April-2025.pdf" target="_blank" rel="noopener" class="assess-link">📋 NHS Circular PCA(P)(2025) 06</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── NHSGGC COPD SERVICE ── -->
+  <div style="margin-bottom:12px">
+    <div style="background:var(--warning-bg);border:1.5px solid var(--warning-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:700;color:var(--warning-text);margin-bottom:2px">🫁 NHSGGC COPD Service</div>
+      <div style="font-size:11px;color:var(--warning-text)">NHS Greater Glasgow &amp; Clyde Community Pharmacy COPD rescue therapy PGDs</div>
+    </div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <div style="background:var(--bg2);padding:8px 14px;font-size:12px;font-weight:700;color:var(--text);border-bottom:0.5px solid var(--border)">COPD Rescue Therapy</div>
+      <div style="padding:10px 14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px">
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-COPD-Amoxicillin-v7-APPROVED-Dec-2025-20262903.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Amoxicillin v7 <span class="pgd-exp">exp Dec 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-COPD-Doxycycline-v7-APPROVED-Dec-2025-20262904.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Doxycycline v7 <span class="pgd-exp">exp Dec 2027</span></a>
+          <a href="https://www.communitypharmacy.scot.nhs.uk/nhs-ggc/wp-content/uploads/sites/11/PGD-COPD-Prednisolone-update-V8-APPROVED-December-2025-20262902.pdf" target="_blank" rel="noopener" class="pgd-link">📄 PGD — Prednisolone v8 <span class="pgd-exp">exp Dec 2027</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:var(--text3);margin-top:4px">
+    ⚠ These links go to NHSGGC documents. If you are in a different Health Board, visit your Board's community pharmacy website for locally authorised PGD versions. PGD links open PDFs — assessment forms open Word documents (.docx). Last updated June 2026 — always check for newer versions.
+  </div>
+</div>
+<div class="nav-row no-print"><button class="btn" onclick="goStep(6)">← Back</button><button class="btn btn-primary" onclick="goStep(8)">Generate SBAR →</button></div>
+</div>
+<div id="step8" class="step-panel">
 
 <!-- CONSULTATION COMPLETENESS CHECKER -->
 <div class="card" id="completenessCard">
@@ -902,6 +1189,26 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   </div>
   <div id="completenessItems" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:6px"></div>
   <div id="completenessMsg" style="margin-top:8px;font-size:12px"></div>
+</div>
+
+<!-- RED FLAG ACKNOWLEDGEMENT PANEL — only shown when flags are active -->
+<div id="redFlagAckPanel" style="display:none">
+  <div style="background:var(--danger-bg);border:2px solid var(--danger-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:18px">🚨</span>
+      <strong style="color:var(--danger-text);font-size:13px">Red flags documented — action required before SBAR</strong>
+    </div>
+    <div id="redFlagAckList" style="margin-bottom:10px;font-size:12px;color:var(--danger-text)"></div>
+    <div style="font-size:11px;color:var(--danger-text);margin-bottom:8px;font-weight:600">For each red flag documented, confirm action taken:</div>
+    <textarea id="redFlagAction" placeholder="e.g. Crushing chest pain — 999 called, patient transferred to A&amp;E. Haemoptysis — 2WW lung cancer referral sent to GP. Non-blanching rash — 999 called, meningococcal sepsis protocol initiated." style="min-height:70px;border-color:var(--danger-border);background:var(--bg);font-size:12px"></textarea>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:var(--danger-text);font-weight:600">
+        <input type="checkbox" id="redFlagAckCheck" onchange="updateRedFlagAck()" style="width:16px;height:16px;cursor:pointer">
+        I confirm appropriate action has been taken for all red flags documented above
+      </label>
+    </div>
+    <div id="redFlagAckWarning" style="display:none;margin-top:6px;font-size:11px;color:var(--danger-text);font-weight:700">⚠ You must document and acknowledge red flag actions before generating the SBAR.</div>
+  </div>
 </div>
 
 <div class="card">
@@ -932,7 +1239,8 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
       </select>
     </div>
     <button class="btn btn-primary" onclick="buildSBAR()">&#8635; Regenerate</button>
-    <button class="btn" onclick="copySBAR()" id="copyBtn">&#10064; Copy</button>
+    <button class="btn" onclick="copySBAR()" id="copyBtn" title="Copy full SBAR to clipboard" style="background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);font-weight:700">&#10064; Copy SBAR</button>
+    <button class="btn" onclick="copySBARForPMR()" id="copyPMRBtn" title="Copy clean text for pasting into EMIS / Vision / PharmOutcomes" style="background:var(--teal-bg);color:var(--teal-text);border-color:var(--teal-border);font-weight:700">&#128203; Copy for PMR</button>
     <button class="btn btn-success" onclick="downloadWordSBAR()" id="wordBtn">&#128196; Download Word (.rtf)</button>
     <button class="btn no-print" onclick="window.print()">&#128438; Print</button>
   </div>
@@ -946,10 +1254,35 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <button class="btn btn-danger" onclick="clearAll()">&#10005; New consultation</button>
   </div>
 </div>
+
+<!-- PATIENT-FACING SUMMARY GENERATOR -->
+<div class="card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div>
+      <h2 style="margin-bottom:2px">&#128172; Patient summary</h2>
+      <p style="font-size:11px;color:var(--text2);margin:0">Plain-English summary for the patient — copy and send via SMS, email or hand to patient on paper.</p>
+    </div>
+    <button onclick="generatePatientSummary()" class="btn btn-primary" style="font-size:11px;flex-shrink:0">&#9654; Generate</button>
+  </div>
+  <div id="patientSummaryOutput" style="display:none">
+    <textarea id="patientSummaryText" style="min-height:120px;font-size:12px;line-height:1.6;background:var(--bg2)" readonly></textarea>
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button onclick="copyPatientSummary()" id="copyPatientBtn" class="btn" style="font-size:11px;background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);font-weight:700">&#10064; Copy</button>
+      <span style="font-size:10px;color:var(--text3);align-self:center">Edit the text above before sending if needed</span>
+    </div>
+  </div>
+</div>
 <div class="nav-row no-print"><button class="btn" onclick="goStep(6)">&#8592; Back</button><span style="font-size:11px;color:var(--text3)">All data stays local &mdash; nothing sent externally</span></div>
 </div>
 
 </div><!-- end .app -->
+
+<div style="max-width:900px;margin:12px auto 0;padding:14px 20px 18px;border-top:2px solid #c62828;font-size:10.5px;color:#c62828;line-height:1.6;text-align:center" class="no-print">
+  <p style="margin:0 0 4px"><strong style="color:#b71c1c;font-size:11.5px">⚠ Clinical Disclaimer</strong></p>
+  <p style="margin:0">This tool is a clinical documentation aid for use by GPhC-registered pharmacists and independent prescribers only. It does not constitute medical advice and must not override clinical judgement. The prescriber remains solely and professionally responsible for all clinical decisions, diagnoses and prescriptions. All formulary data, drug interactions, evidence links and clinical content must be verified at source — BNF, NICE, SMC, eMC SPC, Stockley's — before prescribing. Drug interaction and allergy alerts are decision support aids, not a substitute for professional clinical assessment. In an emergency always call 999.</p>
+  <p style="margin:6px 0 0;color:var(--text3);font-size:10px">Created by Adam Croke — GPhC-registered Pharmacist, Glasgow, Scotland &nbsp;·&nbsp; IP Consultation Tool v3.0 &nbsp;·&nbsp; All data remains local — nothing is transmitted externally</p>
+</div>
+
 <script>
 const SYSTEMS=[
 {key:'constitutional',name:'Constitutional',symptoms:['Fever / rigors','Night sweats','Unintentional weight loss','Fatigue / lethargy','Pallor','Anorexia'],flags:['B-symptoms: fever + night sweats + weight loss','Unintentional weight loss >5% in 6 months','Pallor + fatigue + bruising'],flagAlerts:{'B-symptoms: fever + night sweats + weight loss':'Lymphoma / haematological malignancy. Urgent FBC, ESR, CRP. 2WW haematology.','Unintentional weight loss >5% in 6 months':'NICE NG12 — 2WW referral if >40yrs.','Pallor + fatigue + bruising':'Haematological malignancy — urgent FBC.'},evidence:'NICE NG12 (2023). B-symptoms → urgent haematology.',links:[{t:'nice',l:'NICE NG12',title:'Suspected cancer referral',url:'https://www.nice.org.uk/guidance/ng12'},{t:'cks',l:'CKS',title:'Weight loss — unintentional',url:'https://cks.nice.org.uk/topics/weight-loss-unintentional/'}],selfcare:['Maintain adequate nutrition and hydration','Weigh weekly and document trend','Record temperature — return if >38.5°C for >48hr']},
@@ -985,7 +1318,8 @@ const GLOBAL_LINKS=[
 ];
 
 // ── STATE ──
-let selSym={},selFlag={},selUrgency=null,selContactIdx=null,savedContacts=[],cjHistory=[],lastCJText='';
+let selSym={},selFlag={},selUrgency=null,selContactIdx=null,savedContacts=[];
+var _selectedFormularyDrug = null; // tracks last drug selected from formulary for reasoning context
 
 // ── POSTCODE LOOKUP (postcodes.io — free, no auth) ──
 // ── ADDRESS LOOKUP — Nominatim (OpenStreetMap) ────────────────────────
@@ -3061,6 +3395,56 @@ function initConditionFocus(){
   });
 }
 
+// ── SOCRATES PRE-FILL BY CONDITION ───────────────────────────────────
+// Sensible starter values for each condition — IP edits/confirms before proceeding
+// Only fills if field is currently empty — never overwrites existing content
+
+const SOCRATES_PREFILL = {
+  'earache':     { main:'Earache / ear discharge', char:'Aching, throbbing', rad:'No radiation', agg:'Touching ear, jaw movement', relief:'Warmth, analgesia' },
+  'sore-throat': { main:'Sore throat', char:'Sore, raw, scratchy', rad:'No radiation', agg:'Swallowing, cold air', relief:'Warm fluids, analgesia' },
+  'nasal':       { main:'Nasal congestion / rhinitis symptoms', char:'Blocked, runny, itchy nose', rad:'No radiation', agg:'Allergen exposure, morning', relief:'Antihistamine, saline rinse' },
+  'eye':         { main:'Eye complaint — discharge / redness', char:'Gritty, itchy, watery / discharge', rad:'Unilateral / bilateral', agg:'Bright light, rubbing', relief:'Coolness, cleaning discharge' },
+  'uti':         { main:'Urinary symptoms — burning / frequency / urgency', char:'Burning, stinging on urination', rad:'Suprapubic discomfort', agg:'Urination, holding on', relief:'Increased fluid intake' },
+  'chest-pain':  { main:'Chest pain / discomfort', char:'Describe character — tight / sharp / burning / pressure', rad:'Radiation to arm / jaw / back — yes/no', agg:'Exertion, deep breath, lying flat', relief:'Rest, GTN if prescribed, sitting forward' },
+  'breathless':  { main:'Shortness of breath', char:'Breathlessness at rest / on exertion', rad:'N/A', agg:'Exertion, lying flat, allergen exposure', relief:'Reliever inhaler, sitting upright, rest' },
+  'cough':       { main:'Cough', char:'Dry / productive — describe sputum colour', rad:'N/A', agg:'Cold air, lying down, post-nasal drip', relief:'Steam, warm fluids, honey' },
+  'rash':        { main:'Skin rash / lesion', char:'Describe morphology — macular / papular / vesicular / urticarial', rad:'Distribution and spread pattern', agg:'Heat, scratching, contact with irritant', relief:'Emollient, antihistamine, cool compress' },
+  'wound':       { main:'Skin wound / infection', char:'Erythema, swelling, warmth, discharge', rad:'Spreading redness — extent documented', agg:'Movement, pressure, moisture', relief:'Dressing, elevation, analgesia' },
+  'joint-pain':  { main:'Joint / musculoskeletal pain', char:'Aching / sharp / stiff — worse morning / throughout day', rad:'Local / radiating — specify', agg:'Movement, weight-bearing, cold', relief:'Rest, heat, analgesia, elevation' },
+  'back-pain':   { main:'Back pain', char:'Dull ache / sharp / constant', rad:'Radiating to leg / buttock — L/R', agg:'Bending, lifting, prolonged sitting, morning stiffness', relief:'Movement, heat, analgesia, lying flat' },
+  'headache':    { main:'Headache', char:'Describe — pressure / throbbing / stabbing / tight band', rad:'Unilateral / bilateral / frontal / occipital', agg:'Light, noise, movement, exertion', relief:'Analgesia, dark quiet room, sleep' },
+  'abdo-pain':   { main:'Abdominal pain / GI symptoms', char:'Cramping / colicky / constant / burning', rad:'Localised / diffuse — specify region', agg:'Eating, movement, palpation', relief:'Position, heat, analgesia, fasting' },
+  'diabetes':    { main:'Diabetes review / blood glucose concern', char:'Symptomatic hyperglycaemia / hypoglycaemia / routine review', rad:'N/A', agg:'Illness, missed medication, dietary change', relief:'Insulin / oral hypoglycaemic correction, fluids' },
+  'hypertension':{ main:'Hypertension / blood pressure review', char:'Routine review / symptomatic — headache / visual change', rad:'N/A', agg:'Stress, sodium intake, non-compliance, concurrent NSAIDs', relief:'Antihypertensive medication, lifestyle' },
+  'mental-health':{ main:'Mental health concern — low mood / anxiety / other', char:'Describe presenting symptoms — mood / anxiety / sleep / appetite', rad:'N/A', agg:'Stress, social isolation, substance use', relief:'Medication, talking therapy, exercise' },
+  'fatigue':     { main:'Fatigue / tiredness', char:'Constant / intermittent — physical / mental / both', rad:'N/A', agg:'Exertion, poor sleep, illness', relief:'Rest — not fully relieved by rest' },
+};
+
+function prefillSOCRATES(focusId){
+  var pf = SOCRATES_PREFILL[focusId];
+  if(!pf) return;
+  // Only fill empty fields — never overwrite
+  var mainEl = document.getElementById('pcMain');
+  var charEl  = document.getElementById('pcChar');
+  var radEl   = document.getElementById('pcRad');
+  var aggEl   = document.getElementById('pcAgg');
+  var relEl   = document.getElementById('pcRelief');
+  if(mainEl && !mainEl.value.trim()) mainEl.value = pf.main;
+  if(charEl && !charEl.value.trim()) charEl.value = pf.char;
+  if(radEl  && !radEl.value.trim())  radEl.value  = pf.rad;
+  if(aggEl  && !aggEl.value.trim())  aggEl.value  = pf.agg;
+  if(relEl  && !relEl.value.trim())  relEl.value  = pf.relief;
+  // Flash all filled fields briefly
+  [mainEl, charEl, radEl, aggEl, relEl].forEach(function(el){
+    if(el && el.value){
+      el.style.borderColor = 'var(--info-border)';
+      el.style.background  = 'var(--info-bg)';
+      setTimeout(function(){ el.style.borderColor=''; el.style.background=''; }, 1000);
+    }
+  });
+  updateProgressBar();
+}
+
 function setConditionFocus(focusId){
   var focus = CONDITION_FOCUS.find(function(c){ return c.id === focusId; });
   if(!focus) return;
@@ -3074,6 +3458,9 @@ function setConditionFocus(focusId){
   }
 
   _activeFocus = focusId;
+
+  // Pre-fill SOCRATES fields from condition defaults (empty fields only)
+  prefillSOCRATES(focusId);
 
   // Update pill states
   document.querySelectorAll('.focus-pill').forEach(function(btn){
@@ -3474,6 +3861,315 @@ function addSelectedMed(){
   updateProgressBar();
 }
 
+// ── CONSULTATION TIMER ────────────────────────────────────────────────
+var _timerStart = Date.now();
+var _timerInterval = null;
+
+function startConsultTimer(){
+  _timerStart = Date.now();
+  clearInterval(_timerInterval);
+  _timerInterval = setInterval(function(){
+    var elapsed = Math.floor((Date.now() - _timerStart) / 1000);
+    var mins = Math.floor(elapsed / 60);
+    var secs = elapsed % 60;
+    var el = document.getElementById('consultTimer');
+    if(el) el.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+  }, 1000);
+}
+
+function resetConsultTimer(){
+  _timerStart = Date.now();
+}
+
+function getTimerValue(){
+  var el = document.getElementById('consultTimer');
+  return el ? el.textContent : '00:00';
+}
+
+// Start timer immediately on page load
+startConsultTimer();
+
+// ── DRUG INTERACTION CHECKER ──────────────────────────────────────────
+// Covers the most clinically significant interactions relevant to IP scope
+// Each entry: [drugA pattern, drugB pattern, severity, message]
+// severity: 'danger' (contraindicated/serious), 'warn' (caution/monitor)
+
+const INTERACTIONS = [
+  // ── Anticoagulants ──
+  ['warfarin',    'aspirin|ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|piroxicam|indomethacin',
+   'danger', 'Warfarin + NSAID: significantly increased bleeding risk. NSAIDs inhibit platelet function and can cause GI bleeding. Use paracetamol for analgesia. If NSAID essential, INR monitoring required.'],
+  ['warfarin',    'clarithromycin|erythromycin|metronidazole|fluconazole|ciprofloxacin|levofloxacin|doxycycline|trimethoprim|co-trimoxazole',
+   'danger', 'Warfarin + antibiotic: most antibiotics potentiate warfarin. INR should be checked 3-5 days after starting antibiotic. Patient should be advised to report unusual bruising or bleeding.'],
+  ['warfarin',    'amiodarone|dronedarone',
+   'danger', 'Warfarin + amiodarone: major interaction — amiodarone markedly increases warfarin effect. INR can double or triple. Warfarin dose usually needs reducing by 30-50%. Close INR monitoring essential.'],
+  ['warfarin',    'carbamazepine|phenytoin|phenobarbital|rifampicin',
+   'warn', 'Warfarin + enzyme inducer: these drugs increase warfarin metabolism, reducing its effect. Increased warfarin dose may be needed. Monitor INR closely.'],
+
+  // ── DOACs ──
+  ['apixaban|rivaroxaban|edoxaban|dabigatran',
+   'ibuprofen|naproxen|diclofenac|aspirin|celecoxib|etoricoxib|meloxicam|indomethacin|ketoprofen|mefenamic|piroxicam',
+   'danger', 'DOAC + NSAID: significantly increased bleeding risk. NSAIDs add antiplatelet and GI mucosal effects. Avoid combination where possible. If essential, prescribe PPI cover and advise patient to report bleeding.'],
+  ['apixaban|rivaroxaban|edoxaban|dabigatran',
+   'clarithromycin|erythromycin|itraconazole|ketoconazole|voriconazole',
+   'warn', 'DOAC + strong CYP3A4/P-gp inhibitor: plasma levels of DOAC may increase significantly, raising bleeding risk. Check individual DOAC SPC — some combinations contraindicated (dabigatran + ketoconazole).'],
+
+  // ── Methotrexate ──
+  ['methotrexate',
+   'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|aspirin|ketoprofen|mefenamic|piroxicam|indomethacin',
+   'danger', 'Methotrexate + NSAID: SERIOUS interaction. NSAIDs reduce renal clearance of methotrexate causing toxic accumulation. Can be fatal. Avoid all NSAIDs in patients on methotrexate. Use paracetamol.'],
+  ['methotrexate', 'trimethoprim|co-trimoxazole',
+   'danger', 'Methotrexate + trimethoprim: SERIOUS — both inhibit dihydrofolate reductase, causing additive folate deficiency and methotrexate toxicity (pancytopenia, mucositis). Contraindicated. Use an alternative antibiotic.'],
+  ['methotrexate', 'penicillin|amoxicillin|flucloxacillin|ampicillin|piperacillin',
+   'warn', 'Methotrexate + penicillin: penicillins reduce renal tubular secretion of methotrexate, potentially increasing toxicity. Monitor for methotrexate side effects. Check with rheumatology team if unsure.'],
+
+  // ── SSRIs / SNRIs ──
+  ['sertraline|fluoxetine|citalopram|escitalopram|paroxetine|venlafaxine|duloxetine|mirtazapine',
+   'tramadol',
+   'danger', 'SSRI/SNRI + tramadol: risk of serotonin syndrome (agitation, hyperthermia, tachycardia, muscle rigidity). Also both lower seizure threshold. Avoid combination. Use an alternative analgesic (paracetamol, NSAIDs if appropriate).'],
+  ['sertraline|fluoxetine|citalopram|escitalopram|paroxetine|venlafaxine|duloxetine',
+   'sumatriptan|zolmitriptan|rizatriptan|almotriptan|eletriptan|naratriptan',
+   'warn', 'SSRI + triptan: weak serotonin syndrome risk. Usually manageable but monitor for symptoms. MHRA advises caution. Most patients tolerate the combination — reassess if symptoms develop.'],
+  ['sertraline|fluoxetine|citalopram|escitalopram|paroxetine|venlafaxine|duloxetine',
+   'ibuprofen|naproxen|diclofenac|aspirin|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|indomethacin',
+   'warn', 'SSRI + NSAID: increased risk of GI bleeding (3-fold increase). SSRIs impair platelet aggregation. Consider PPI cover, especially in those >65 or with GI history. Use paracetamol if possible.'],
+
+  // ── ACE inhibitors / ARBs ──
+  ['ramipril|lisinopril|enalapril|perindopril|captopril|losartan|candesartan|valsartan|irbesartan|telmisartan',
+   'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|indomethacin|piroxicam',
+   'warn', 'ACE inhibitor/ARB + NSAID: reduced antihypertensive effect. NSAIDs cause sodium/water retention and vasoconstriction. Risk of acute kidney injury — especially in elderly, diabetic or pre-existing CKD. Avoid regular NSAID use.'],
+  ['ramipril|lisinopril|enalapril|perindopril|captopril|losartan|candesartan|valsartan|irbesartan|telmisartan',
+   'trimethoprim|spironolactone|eplerenone',
+   'warn', 'ACE inhibitor/ARB + potassium-sparing agent: risk of hyperkalaemia, especially in CKD. Monitor potassium levels. Trimethoprim acts like potassium-sparing diuretic.'],
+
+  // ── Lithium ──
+  ['lithium',
+   'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|indomethacin|piroxicam',
+   'danger', 'Lithium + NSAID: SERIOUS — NSAIDs reduce renal clearance of lithium, causing toxic levels. Risk of lithium toxicity (tremor, confusion, vomiting, renal failure). Avoid all NSAIDs in patients on lithium. Use paracetamol.'],
+  ['lithium',
+   'metronidazole',
+   'warn', 'Lithium + metronidazole: some reports of raised lithium levels. Monitor for lithium toxicity symptoms. Consider checking lithium level if course >5 days.'],
+
+  // ── Digoxin ──
+  ['digoxin',
+   'clarithromycin|erythromycin|azithromycin',
+   'danger', 'Digoxin + macrolide antibiotic: macrolides reduce gut flora that metabolise digoxin, markedly increasing plasma levels. Risk of digoxin toxicity (bradycardia, nausea, visual disturbance). Monitor for symptoms; check digoxin level.'],
+  ['digoxin', 'ibuprofen|naproxen|diclofenac',
+   'warn', 'Digoxin + NSAID: NSAIDs can increase digoxin levels by reducing renal clearance. Monitor for digoxin toxicity in patients with CKD.'],
+
+  // ── Statins ──
+  ['atorvastatin|simvastatin|rosuvastatin|pravastatin|fluvastatin',
+   'clarithromycin|erythromycin',
+   'danger', 'Statin + macrolide: clarithromycin/erythromycin strongly inhibit CYP3A4, increasing statin levels. Risk of myopathy and rhabdomyolysis (especially simvastatin/atorvastatin). Suspend statin during short antibiotic course or use azithromycin instead.'],
+  ['simvastatin',
+   'itraconazole|ketoconazole|voriconazole|fluconazole',
+   'danger', 'Simvastatin + azole antifungal: azoles strongly inhibit CYP3A4 — simvastatin levels can increase >10-fold. Risk of severe myopathy. Suspend simvastatin during azole course. Rosuvastatin/pravastatin are safer alternatives.'],
+
+  // ── QT prolongation ──
+  ['clarithromycin|erythromycin|azithromycin',
+   'amiodarone|sotalol|dronedarone',
+   'danger', 'Macrolide + antiarrhythmic: additive QT prolongation risk. Can cause Torsades de Pointes. Avoid combination where possible. If essential, ECG monitoring required.'],
+  ['clarithromycin|erythromycin|azithromycin',
+   'quetiapine|haloperidol|chlorpromazine|amisulpride|methadone',
+   'warn', 'Macrolide + QT-prolonging antipsychotic: additive QT prolongation. Use with caution or avoid. Azithromycin has lower CYP3A4 interaction but still prolongs QT.'],
+
+  // ── Antiepileptics ──
+  ['carbamazepine|phenytoin|phenobarbital',
+   'clarithromycin|erythromycin|fluconazole|metronidazole',
+   'warn', 'Enzyme-inducing antiepileptic + inhibitor antibiotic: antibiotic inhibits metabolism of antiepileptic, raising plasma levels. Risk of toxicity (ataxia, diplopia, drowsiness for carbamazepine; nystagmus, confusion for phenytoin). Monitor.'],
+
+  // ── Theophylline ──
+  ['theophylline|aminophylline',
+   'clarithromycin|erythromycin|ciprofloxacin|levofloxacin',
+   'danger', 'Theophylline + clarithromycin/ciprofloxacin: these antibiotics significantly increase theophylline levels by inhibiting CYP1A2. Risk of theophylline toxicity (arrhythmia, seizure). Theophylline level should be checked and dose reduced.'],
+
+  // ── SGLT-2 inhibitors ──
+  ['dapagliflozin|empagliflozin|canagliflozin|ertugliflozin',
+   'trimethoprim|nitrofurantoin|cefalexin|amoxicillin|co-amoxiclav|ciprofloxacin|levofloxacin',
+   'warn', 'SGLT-2 inhibitor + antibiotic for UTI: SGLT-2 inhibitors increase glycosuria and UTI risk. Also rare risk of euglycaemic DKA — advise patient to STOP SGLT-2 inhibitor during acute infection/illness and not restart until eating/drinking normally.'],
+
+  // ── Diabetes / hypoglycaemia ──
+  ['gliclazide|glipizide|glimepiride|tolbutamide',
+   'clarithromycin|erythromycin|fluconazole|metronidazole|trimethoprim|ciprofloxacin',
+   'warn', 'Sulfonylurea + interacting antibiotic: several antibiotics inhibit metabolism or displace sulfonylureas, increasing hypoglycaemia risk. Monitor blood glucose during course and advise patient regarding hypoglycaemia symptoms.'],
+
+  // ── Isotretinoin ──
+  ['isotretinoin',
+   'doxycycline|tetracycline|lymecycline|minocycline|oxytetracycline',
+   'danger', 'Isotretinoin + tetracycline: CONTRAINDICATED. Both independently cause benign intracranial hypertension (pseudotumour cerebri). Combination greatly increases risk. Do not co-prescribe.'],
+
+  // ── Metronidazole / alcohol warning ──
+  ['metronidazole|tinidazole',
+   'alcohol',
+   'danger', 'Metronidazole + alcohol: disulfiram-like reaction (flushing, vomiting, tachycardia). Alcohol must be avoided during treatment and for 48 hours after the last dose. Counsel patient explicitly.'],
+];
+
+// ── ALLERGY CROSS-REACTIVITY DATA ────────────────────────────────────
+// Format: [allergy_pattern, drug_pattern, severity, message]
+const ALLERGY_CHECKS = [
+  // Penicillin allergy
+  ['penicillin|amoxicillin|ampicillin|flucloxacillin|co-amoxiclav|phenoxymethylpenicillin',
+   'amoxicillin|co-amoxiclav|flucloxacillin|phenoxymethylpenicillin|ampicillin|benzylpenicillin|piperacillin|temocillin',
+   'danger', '⚠ ALLERGY ALERT: Patient has documented penicillin allergy. Prescribing a penicillin — check allergy type and severity before proceeding. If anaphylaxis or severe reaction, do not prescribe. If minor rash only, cross-reactivity risk is low but confirm with patient.'],
+  ['penicillin|amoxicillin|ampicillin|flucloxacillin|co-amoxiclav',
+   'cefalexin|cefuroxime|ceftriaxone|cefadroxil|cefradine',
+   'warn', 'Penicillin allergy noted: 1-2% cross-reactivity with cephalosporins. For severe penicillin allergy (anaphylaxis, urticaria) avoid cephalosporins. For mild penicillin allergy (rash only) cephalosporins are usually safe. Document decision.'],
+
+  // NSAID allergy
+  ['aspirin|ibuprofen|naproxen|nsaid',
+   'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|indomethacin|piroxicam|aspirin',
+   'danger', '⚠ ALLERGY ALERT: NSAID/aspirin hypersensitivity documented. Prescribing an NSAID — significant cross-reactivity between NSAIDs. Aspirin-sensitive asthma is a contraindication. Do not prescribe without confirming allergy details.'],
+
+  // Sulfonamide allergy
+  ['sulfonamide|sulfamethoxazole|co-trimoxazole|trimethoprim',
+   'trimethoprim|co-trimoxazole',
+   'warn', 'Sulfonamide allergy noted: cross-reactivity with trimethoprim is low but documented. Confirm allergy history. If previous severe reaction to co-trimoxazole, use alternative antibiotic (e.g. nitrofurantoin for UTI).'],
+
+  // Macrolide allergy
+  ['erythromycin|clarithromycin|azithromycin|macrolide',
+   'clarithromycin|erythromycin|azithromycin',
+   'warn', 'Macrolide allergy noted: cross-reactivity within macrolide class exists. Confirm which macrolide caused the reaction. If uncertain, use an alternative class (e.g. doxycycline for respiratory infections).'],
+
+  // Quinolone allergy
+  ['ciprofloxacin|levofloxacin|moxifloxacin|quinolone|fluoroquinolone',
+   'ciprofloxacin|levofloxacin|moxifloxacin|norfloxacin',
+   'warn', 'Quinolone/fluoroquinolone allergy noted: cross-reactivity within quinolone class. Confirm which drug caused the reaction. Consider alternative antibiotic class.'],
+
+  // Tetracycline allergy
+  ['tetracycline|doxycycline|lymecycline|minocycline',
+   'doxycycline|tetracycline|lymecycline|minocycline|oxytetracycline',
+   'warn', 'Tetracycline allergy noted: cross-reactivity within tetracycline class. Confirm which drug caused reaction. Use alternative class.'],
+
+  // Codeine / opioid allergy
+  ['codeine|morphine|opioid|tramadol',
+   'codeine|tramadol|morphine|oxycodone|fentanyl|buprenorphine|dihydrocodeine',
+   'warn', 'Opioid sensitivity/allergy noted: true opioid allergy is rare (usually intolerance). Cross-reactivity between opioid classes is variable. Confirm nature of reaction. If true anaphylaxis to codeine, avoid all opioids until reviewed by specialist.'],
+
+  // Metformin / contrast / iodine
+  ['iodine|contrast',
+   'amiodarone',
+   'warn', 'Iodine allergy noted: amiodarone contains significant iodine. Risk of iodine hypersensitivity reaction. Consult cardiologist before prescribing.'],
+
+  // Latex (relevant for some formulations)
+  ['latex',
+   'metronidazole.*vaginal|clindamycin.*vaginal',
+   'warn', 'Latex allergy noted: some vaginal applicators contain latex. Check product SPC for latex content before prescribing.'],
+];
+
+// ── SAFETY CHECK ENGINE ───────────────────────────────────────────────
+
+function runSafetyChecks(){
+  var rxDrug    = (v('rxDrug') || '').toLowerCase();
+  var meds      = (v('ptMeds') || '').toLowerCase();
+  var allergies = (v('ptAllergies') || '').toLowerCase();
+  var panel     = document.getElementById('safetyChecksPanel');
+  if(!panel) return;
+
+  if(!rxDrug){ panel.style.display='none'; return; }
+
+  var alerts = [];
+
+  // ── Check interactions: prescribed drug vs each medication ──
+  INTERACTIONS.forEach(function(rule){
+    var patA = new RegExp(rule[0], 'i');
+    var patB = new RegExp(rule[1], 'i');
+    var sev  = rule[2];
+    var msg  = rule[3];
+
+    var rxMatchA = patA.test(rxDrug);
+    var rxMatchB = patB.test(rxDrug);
+
+    if(rxMatchA){
+      // Look for B in medications
+      var medLines = meds.split(/[\n,;]+/);
+      medLines.forEach(function(med){
+        med = med.trim();
+        if(med && patB.test(med)){
+          alerts.push({sev:sev, type:'interaction', msg:msg, detail:'Prescribing: '+rxDrug+' | Medication: '+med});
+        }
+      });
+    }
+    if(rxMatchB){
+      var medLines = meds.split(/[\n,;]+/);
+      medLines.forEach(function(med){
+        med = med.trim();
+        if(med && patA.test(med)){
+          alerts.push({sev:sev, type:'interaction', msg:msg, detail:'Prescribing: '+rxDrug+' | Medication: '+med});
+        }
+      });
+    }
+  });
+
+  // ── Check allergy cross-reactivity ──
+  if(allergies && allergies !== 'nkda'){
+    ALLERGY_CHECKS.forEach(function(rule){
+      var allergyPat = new RegExp(rule[0], 'i');
+      var drugPat    = new RegExp(rule[1], 'i');
+      var sev        = rule[2];
+      var msg        = rule[3];
+
+      if(allergyPat.test(allergies) && drugPat.test(rxDrug)){
+        alerts.push({sev:sev, type:'allergy', msg:msg, detail:'Allergy: '+allergies+' | Prescribing: '+rxDrug});
+      }
+    });
+  }
+
+  if(!alerts.length){
+    panel.style.display='block';
+    panel.innerHTML = '<div style="display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:var(--radius);font-size:12px;color:var(--success-text)">'
+      +'<span style="font-size:15px">✅</span>'
+      +'<span><strong>No interactions or allergy conflicts detected</strong> for the current prescription against documented medications and allergies. Always verify independently using the BNF interactions checker.</span>'
+      +'</div>';
+    return;
+  }
+
+  // Render alerts — dangers first, then warnings
+  alerts.sort(function(a,b){ return a.sev==='danger'&&b.sev!=='danger'?-1:1; });
+
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:5px">&#128681; Safety checks — '+alerts.length+' alert'+(alerts.length>1?'s':'')+' detected</div>'
+    + alerts.map(function(a){
+        var bg   = a.sev==='danger' ? 'var(--danger-bg)'   : 'var(--warning-bg)';
+        var bord = a.sev==='danger' ? 'var(--danger-border)': 'var(--warning-border)';
+        var col  = a.sev==='danger' ? 'var(--danger-text)'  : 'var(--warning-text)';
+        var icon = a.sev==='danger' ? '🚨' : '⚠️';
+        var badge= a.sev==='danger' ? 'CONTRAINDICATED / SERIOUS' : 'CAUTION — MONITOR';
+        return '<div style="background:'+bg+';border:1.5px solid '+bord+';border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">'
+          +'<span style="font-size:16px">'+icon+'</span>'
+          +'<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;background:'+bord+';color:#fff">'+badge+'</span>'
+          +'<span style="font-size:10px;color:'+col+';opacity:.8">'+a.type.toUpperCase()+'</span>'
+          +'</div>'
+          +'<div style="font-size:12px;color:'+col+';line-height:1.5;margin-bottom:3px">'+a.msg+'</div>'
+          +'<div style="font-size:10px;color:'+col+';opacity:.75">'+a.detail+'</div>'
+          +'</div>';
+      }).join('')
+    + '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-style:italic">These alerts are clinical decision support aids — they do not replace independent clinical judgement. Always verify using the BNF interactions checker and eMC SPC.</div>';
+
+  // Auto-populate interactions field if it's empty
+  var rxInt = document.getElementById('rxInteractions');
+  if(rxInt && !rxInt.value.trim()){
+    var dangerAlerts = alerts.filter(function(a){ return a.sev==='danger'; });
+    var warnAlerts   = alerts.filter(function(a){ return a.sev==='warn'; });
+    var lines = [];
+    if(dangerAlerts.length) lines.push('⚠ INTERACTIONS FLAGGED — see safety panel above.');
+    dangerAlerts.forEach(function(a){ lines.push('SERIOUS: '+a.detail); });
+    warnAlerts.forEach(function(a){ lines.push('Caution: '+a.detail); });
+    rxInt.value = lines.join('\n');
+  }
+}
+
+// ── WIRE UP SAFETY CHECK TRIGGERS ────────────────────────────────────
+// Run checks when prescription drug or medications change
+document.addEventListener('DOMContentLoaded', function(){
+  ['rxDrug','ptMeds','ptAllergies'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('input', function(){
+      clearTimeout(el._safetyTimer);
+      el._safetyTimer = setTimeout(runSafetyChecks, 500);
+    });
+  });
+});
+
 // ── NATION DEFAULTS ──
 function updateNationDefaults(){
   const nation=v('ptNation');
@@ -3534,9 +4230,10 @@ const PROGRESS_STEPS = [
     n: 6, label: 'Reasoning', icon: '🧠',
     check: function(){ return !!v('clinicalReasoning'); }
   },
+  // Note: step 7 (PGDs) is a reference tab only — excluded from progress calculation
   {
-    n: 7, label: 'SBAR', icon: '📄',
-    check: function(){ return document.getElementById('sbarOutput') && document.getElementById('sbarOutput').textContent.length > 80; }
+    n: 8, label: 'SBAR', icon: '📄',
+    check: function(){ return !!(document.getElementById('sbarOutput') && document.getElementById('sbarOutput').textContent.length > 80); }
   },
 ];
 
@@ -3578,8 +4275,8 @@ function goStep(n){
   document.querySelectorAll('.step-tab')[n].classList.add('active');
   if(n===2){renderDDX(); if(window._pendingFocus) applyFocusToGrid(window._pendingFocus);}
   if(n===3)updateGPSummary();
-  if(n===4)populateRxEvidenceLinks();
-  if(n===7){buildSBAR();buildSummary();runCompletenessCheck();}
+  if(n===4){populateRxEvidenceLinks(); updateRxSafetyLinks(); setTimeout(runSafetyChecks, 100);}
+  if(n===8){updateRedFlagPanel();buildSummary();runCompletenessCheck();buildSBAR();}
   updateProgressBar();
 }
 document.getElementById('stepTabs').addEventListener('click',e=>{const t=e.target.closest('.step-tab');if(t)goStep(parseInt(t.dataset.step));});
@@ -4082,7 +4779,61 @@ function populateRxEvidenceLinks(){
   const el=document.getElementById('rxEvidenceLinks');
   const links=[...GLOBAL_LINKS,...SYSTEMS.flatMap(s=>s.links)];
   const seen=new Set();const unique=links.filter(l=>{if(seen.has(l.url))return false;seen.add(l.url);return true;});
-  el.innerHTML=unique.slice(0,8).map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" class="evlink evlink-'+l.t+'" title="'+l.title+'">'+l.l+' &#8599;</a>').join('');
+  el.innerHTML=unique.slice(0,6).map(l=>'<a href="'+l.url+'" target="_blank" rel="noopener" class="evlink evlink-'+l.t+'" title="'+l.title+'">'+l.l+' &#8599;</a>').join('');
+  updateRxSafetyLinks();
+}
+
+function updateRxSafetyLinks(){
+  var drug = (v('rxDrug')||'').trim();
+  var drugSearch = drug ? drug.split(' ')[0].toLowerCase() : '';
+  var panel = document.getElementById('rxSafetyLinks');
+  if(!panel) return;
+
+  // BNF interactions deep-link — uses drug name for search
+  var bnfIntUrl = drug
+    ? 'https://bnf.nice.org.uk/interactions/?drug='+encodeURIComponent(drug)
+    : 'https://bnf.nice.org.uk/interactions/';
+
+  // BNF monograph deep-link
+  var bnfMonoUrl = drug
+    ? 'https://bnf.nice.org.uk/search/?q='+encodeURIComponent(drugSearch)
+    : 'https://bnf.nice.org.uk';
+
+  panel.innerHTML =
+    '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Drug-specific resources'+(drug?' — '+drug:'')+'</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    +'<a href="'+bnfIntUrl+'" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);font-size:12px;font-weight:700;color:var(--danger-text);text-decoration:none" '
+      +'title="Check interactions for this drug in the BNF">'
+      +'&#128681; BNF Interactions'+(drug?' — '+drug.split(' ')[0]:'')+'&#8599;'
+    +'</a>'
+    +'<a href="'+bnfMonoUrl+'" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--success-bg);border:1px solid var(--success-border);border-radius:var(--radius);font-size:12px;font-weight:700;color:var(--success-text);text-decoration:none" '
+      +'title="BNF monograph for this drug">'
+      +'&#128218; BNF Monograph&#8599;'
+    +'</a>'
+    +'<a href="https://www.sps.nhs.uk/articles/?s='+encodeURIComponent(drugSearch)+'" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--info-bg);border:1px solid var(--info-border);border-radius:var(--radius);font-size:12px;font-weight:700;color:var(--info-text);text-decoration:none" '
+      +'title="Search Specialist Pharmacy Service for this drug">'
+      +'&#128203; SPS — Specialist Pharmacy Service&#8599;'
+    +'</a>'
+    +'<a href="https://www.sps.nhs.uk/" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--text2);text-decoration:none" '
+      +'title="SPS — Specialist Pharmacy Service homepage">'
+      +'SPS Homepage&#8599;'
+    +'</a>'
+    +'<a href="https://www.medicines.org.uk/emc/search?q='+encodeURIComponent(drugSearch)+'" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--text2);text-decoration:none" '
+      +'title="eMC SPC / PIL for this drug">'
+      +'&#128196; eMC SPC&#8599;'
+    +'</a>'
+    +'<a href="https://www.medicinescomplete.com/#/search/stockley/'+encodeURIComponent(drugSearch)+'" target="_blank" rel="noopener" '
+      +'style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:var(--purple-bg);border:1px solid var(--purple-border);border-radius:var(--radius);font-size:12px;font-weight:600;color:var(--purple-text);text-decoration:none" '
+      +'title="Stockley\'s Drug Interactions — requires NHS OpenAthens / MedicinesComplete login">'
+      +'&#128274; Stockley\'s Interactions&#8599;'
+    +'</a>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:5px">&#8679; BNF Interactions opens the official NICE/BNF checker directly'+(drug?' pre-searched for <strong>'+drug.split(' ')[0]+'</strong>':'')+'. Always verify interactions at source before prescribing.</div>';
 }
 
 // ── OUTCOME ──
@@ -4515,56 +5266,379 @@ function buildOutcomeLinks(){
 }
 
 // ── CJ ASSISTANT ──
-async function askCJ(){
-  const q=(document.getElementById('cjQuestion').value||'').trim();if(!q)return;
-  const resp=document.getElementById('cjResponse');const cont=document.getElementById('cjResponseContent');
-  resp.style.display='block';cont.textContent='Consulting evidence base...';cont.style.fontStyle='italic';cont.style.color='var(--text3)';
 
-  const ctx=buildContext();
-  const systemPrompt='You are a clinical decision support assistant for independent prescribers working in community pharmacy across the UK, with specific expertise in NHS Scotland (Pharmacy First Plus, GP10 prescribing, SMC formulary, NHS Inform, ADTC guidelines, Right Decisions Scotland, CPS guidance) and NHS England (Pharmacy First, NICE, BNF, CKS). Reference specific UK guidelines relevant to the prescriber\'s nation. For Scotland: reference SMC decisions, local ADTC formularies, NHS Inform, CPS (Community Pharmacy Scotland), and Pharmacy First Plus PCA circulars. Address IP scope explicitly. Highlight contraindications and drug interactions. If prescribing is appropriate give dose/duration/monitoring. End with a one-sentence SBAR justification the prescriber can copy. Nation context from consultation: '+(v('ptNation')||'Scotland')+'. Health Board: '+(v('ptHealthBoard')||'not specified')+'. Context: '+ctx;
+// ── REASONING SCRATCHPAD ACCORDION ───────────────────────────────────
+function toggleReasoningSection(id){
+  var body  = document.getElementById(id+'-body');
+  var arrow = document.getElementById(id+'-arrow');
+  if(!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'block';
+  if(arrow) arrow.textContent = open ? '▼' : '▲';
+}
 
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:systemPrompt,messages:[{role:'user',content:q}]})
-    });
-    const data=await res.json();
-    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
-    if(!text){cont.textContent='No response received. Check your internet connection.';return;}
-    cont.textContent=text;cont.style.fontStyle='normal';cont.style.color='var(--text)';
-    lastCJText=text;cjHistory.push({q,a:text});renderCJHistory();
-  }catch(e){
-    cont.textContent='Error: '+e.message+'. Please check your internet connection.';cont.style.color='var(--danger-text)';
+// ── CLINICAL REASONING COMPILE ────────────────────────────────────────
+function compileReasoning(){
+  var parts = [];
+  var diagnosis = (document.getElementById('reasoningDiagnosis').value||'').trim();
+  var evidence  = (document.getElementById('reasoningEvidence').value||'').trim();
+  var alts      = (document.getElementById('reasoningAlternatives').value||'').trim();
+  var interact  = (document.getElementById('reasoningInteractions').value||'').trim();
+  var consent   = (document.getElementById('reasoningConsent').value||'').trim();
+  if(diagnosis) parts.push('Diagnosis: '+diagnosis);
+  if(evidence)  parts.push('Evidence: '+evidence);
+  if(alts)      parts.push('Alternatives considered: '+alts);
+  if(interact)  parts.push('Interactions/safety: '+interact);
+  if(consent)   parts.push('Consent/counselling: '+consent);
+  if(!parts.length){ alert('Complete at least one field above first.'); return; }
+  var el = document.getElementById('clinicalReasoning');
+  el.value = parts.join(' | ');
+  el.style.borderColor='var(--success-border)';
+  el.style.background='var(--success-bg)';
+  setTimeout(function(){el.style.borderColor='';el.style.background='';},1500);
+}
+
+function markNoInteractions(){
+  var el = document.getElementById('rxInteractions');
+  if(!el) return;
+  var drug = v('rxDrug') || 'prescribed drug';
+  var meds = v('ptMeds') || '';
+  var allergies = v('ptAllergies') || 'NKDA';
+  var medsList = meds ? meds.trim().replace(/\n/g, ', ') : 'none documented';
+  el.value = 'No significant drug interactions identified for ' + drug.split(' ')[0]
+    + ' against current medications (' + medsList + '). '
+    + 'Allergy status: ' + allergies + '. '
+    + 'BNF interactions checker reviewed. No additional monitoring required for this course.';
+  el.style.borderColor='var(--success-border)';
+  el.style.background='var(--success-bg)';
+  setTimeout(function(){ el.style.borderColor=''; el.style.background=''; }, 1200);
+  updateProgressBar();
+}
+
+// ── FEATURE 12: AUTO-GENERATE CLINICAL REASONING ─────────────────────
+function autoGenerateReasoning(){
+  var el = document.getElementById('clinicalReasoning');
+  if(!el) return;
+  if(el.value.trim() && !confirm('This will replace existing reasoning text. Continue?')) return;
+
+  var parts = [];
+  var hb = v('ptHealthBoard') || 'NHS Scotland';
+
+  // Working diagnosis + confidence
+  var dx = v('workingDiagnosis');
+  var conf = v('diagConfidence');
+  if(dx) parts.push('Working diagnosis: ' + dx + (conf ? ' (' + conf.toLowerCase() + ')' : '') + '.');
+
+  // Systems assessed with findings
+  var sysFindings = [];
+  SYSTEMS.forEach(function(s){
+    var ft = v('ft-'+s.key);
+    var flags = (selFlag[s.key]||[]);
+    var syms  = (selSym[s.key]||[]);
+    if(ft && ft.trim()) sysFindings.push(s.name + ': ' + ft.trim().replace(/\n/g, '; '));
+    else if(flags.length || syms.length) sysFindings.push(s.name + ' assessed — ' + syms.concat(flags).join(', ') + '.');
+  });
+  if(sysFindings.length) parts.push('Examination and systems review: ' + sysFindings.join(' '));
+
+  // Differentials considered
+  if(_ddxSelected && _ddxSelected.size > 0){
+    parts.push('Differentials considered: ' + Array.from(_ddxSelected).join(', ') + '.');
   }
-}
-function appendCJToReasoning(){
-  const ra=document.getElementById('clinicalReasoning');
-  const ex=ra.value.trim();
-  ra.value=(ex?ex+'\n\n':'')+lastCJText.substring(0,600);
-  alert('Added to clinical reasoning. Edit as needed before generating the SBAR.');
-}
-function clearCJ(){document.getElementById('cjQuestion').value='';document.getElementById('cjResponse').style.display='none';}
-function renderCJHistory(){
-  const el=document.getElementById('cjHistory');
-  if(cjHistory.length<=1){el.innerHTML='';return;}
-  el.innerHTML='<p class="slabel">Previous questions</p>'+cjHistory.slice(0,-1).map(h=>'<div style="border:0.5px solid var(--border);border-radius:var(--radius);padding:7px 10px;margin-bottom:5px;font-size:12px"><div style="font-weight:700;color:var(--purple-text);margin-bottom:2px">Q: '+h.q+'</div><div style="color:var(--text2)">'+h.a.substring(0,250)+(h.a.length>250?'...':'')+'</div></div>').join('');
+  var ruledOut = v('ddxRuledOut');
+  if(ruledOut) parts.push('Diagnoses excluded: ' + ruledOut + '.');
+
+  // Prescription justification — with formulary source context
+  var drug = v('rxDrug');
+  var dose = v('rxDose');
+  var freq = v('rxFreq');
+  var dur  = v('rxDuration');
+  var ind  = v('rxIndication');
+  if(drug){
+    var rxStr = drug;
+    if(dose) rxStr += ' ' + dose;
+    if(freq) rxStr += ' ' + freq;
+    if(dur)  rxStr += ' for ' + dur;
+
+    // Add formulary/guideline source if drug was selected from the SDT formulary
+    var formularyNote = '';
+    if(_selectedFormularyDrug){
+      var d = _selectedFormularyDrug;
+      // Determine guideline reference from category
+      var guidelineMap = {
+        'Infections / Antimicrobials': 'in accordance with ' + hb + ' antimicrobial guidelines and Scottish Drug Tariff Part 7 (SDT v40, April 2026). SIGN antibiotic guidance reviewed.',
+        'Cardiovascular':    'listed on ' + hb + ' formulary (SDT Part 7). Prescribing in line with NICE/SIGN cardiovascular guidelines.',
+        'Respiratory':       'in accordance with BTS/SIGN respiratory guidelines and ' + hb + ' formulary (SDT Part 7).',
+        'Endocrine / Diabetes': 'in accordance with SIGN 116 diabetes guidelines and ' + hb + ' formulary (SDT Part 7). SGLT-2/GLP-1: SIGN 116 criteria met.',
+        'ENT / Eye / Ear':   'listed on Scottish Drug Tariff Part 7 and NHS Pharmacy First Scotland approved list (v40, April 2026). NICE CKS reviewed.',
+        'Skin / Dermatology':'listed on ' + hb + ' formulary (SDT Part 7) and NICE CKS guidance reviewed.',
+        'Musculoskeletal / Pain': 'in line with NICE/SIGN analgesic guidance and ' + hb + ' formulary (SDT Part 7).',
+        'Gastroenterology':  'in accordance with ' + hb + ' formulary (SDT Part 7) and NICE/BSG guidance.',
+        'Neurology / Mental health': 'in accordance with ' + hb + ' formulary (SDT Part 7) and NICE/SIGN mental health/neurology guidelines.',
+        'Genitourinary':     'in accordance with ' + hb + ' formulary and NHS Pharmacy First Scotland approved list where applicable (SDT Part 7, v40).',
+        'Obstetrics / Gynaecology': 'in accordance with ' + hb + ' formulary (SDT Part 7) and NICE/FSRH guidelines.',
+      };
+      var catNote = guidelineMap[d.cat] || 'listed on the Scottish Drug Tariff Part 7 formulary (SDT v40, April 2026).';
+      formularyNote = ' Drug selected from NHS Scotland formulary (SDT Part 7, ' + d.cat + '): ' + catNote;
+    }
+
+    parts.push('Treatment: ' + rxStr + (ind ? ' — indication: ' + ind : '') + '.' + formularyNote);
+  }
+
+  // Interactions check
+  var interactions = v('rxInteractions');
+  if(interactions) parts.push('Interactions/monitoring: ' + interactions);
+
+  // Allergy check
+  var allergies = v('ptAllergies');
+  if(allergies && allergies.toLowerCase() !== 'nkda'){
+    parts.push('Allergy status: ' + allergies + ' — prescribing decision made in context of documented allergy.');
+  } else if(allergies){
+    parts.push('Allergy status confirmed: ' + allergies + '.');
+  }
+
+  // Scope of practice
+  var scope = v('ipScope');
+  if(scope) parts.push('Scope of practice: ' + scope + '. Prescription is within IP scope of practice.');
+
+  // Referral decision
+  var referral = v('ddxReferral');
+  if(referral) parts.push('Referral decision: ' + referral + '.');
+
+  // Observations if abnormal
+  var obsText = getObsSummaryForSBAR();
+  if(obsText && obsText !== 'Not recorded') parts.push('Observations: ' + obsText + '.');
+
+  if(!parts.length){
+    alert('Complete more consultation fields first — working diagnosis, systems review and prescription details will populate this automatically.');
+    return;
+  }
+
+  el.value = parts.join('\n\n');
+  el.style.borderColor = 'var(--purple-border)';
+  el.style.background  = 'var(--purple-bg)';
+  setTimeout(function(){ el.style.borderColor=''; el.style.background=''; }, 1500);
 }
 
-// ── CONTEXT BUILDER ──
-function buildContext(){
-  return 'Patient: '+v('ptFirst')+' '+v('ptLast')+', DOB: '+v('ptDob')+', Sex: '+v('ptSex')+
-  ', Allergies: '+(v('ptAllergies')||'NKDA')+', PMH: '+(v('ptPMH')||'none')+
-  ', Meds: '+(v('ptMeds')||'none')+
-  '. Complaint: '+(v('pcMain')||'not recorded')+' Duration: '+v('pcDuration')+
-  '. Prescription: '+(v('rxDrug')||'none')+(v('rxDose')?' '+v('rxDose'):'')+(v('rxFreq')?' '+v('rxFreq'):'')+(v('rxDuration')?' for '+v('rxDuration'):'')+
-  '. IP scope: '+(v('ipScope')||'not specified')+
-  '. Systems with findings: '+SYSTEMS.filter(s=>(selFlag[s.key]||[]).length>0||(selSym[s.key]||[]).length>0).map(s=>s.name+': flags=['+(selFlag[s.key]||[]).join('; ')+']').join(' | ');
+// ── FEATURE 10: PATIENT-FACING SUMMARY GENERATOR ─────────────────────
+function generatePatientSummary(){
+  var output = document.getElementById('patientSummaryOutput');
+  var textEl  = document.getElementById('patientSummaryText');
+  if(!output || !textEl) return;
+
+  var ptName   = (v('ptFirst') + ' ' + v('ptLast')).trim() || 'You';
+  var dx       = v('workingDiagnosis') || '';
+  var drug     = v('rxDrug') || '';
+  var dose     = v('rxDose') || '';
+  var freq     = v('rxFreq') || '';
+  var dur      = v('rxDuration') || '';
+  var counsel  = v('rxCounsel') || '';
+  var safety   = v('safetyNet') || '';
+  var followUp = v('followUp') || '';
+  var pharm    = v('pharmName') || 'your pharmacy';
+  var pharmTel = v('pharmPhone') || '';
+  var ipName   = v('ipName') || 'your prescribing pharmacist';
+  var date     = new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+  var lines = [];
+  lines.push('Dear ' + (ptName !== ' ' ? ptName : 'Patient') + ',');
+  lines.push('');
+  lines.push('Thank you for attending ' + pharm + ' today (' + date + ').');
+  lines.push('');
+
+  if(dx){
+    lines.push('Following your consultation, your pharmacist has assessed you with: ' + dx + '.');
+    lines.push('');
+  }
+
+  if(drug){
+    var rxLine = 'You have been prescribed: ' + drug;
+    if(dose) rxLine += ', ' + dose;
+    if(freq) rxLine += ', ' + freq;
+    if(dur)  rxLine += ', for ' + dur;
+    rxLine += '.';
+    lines.push(rxLine);
+    lines.push('');
+  }
+
+  if(counsel){
+    lines.push('How to take / use your medication:');
+    lines.push(counsel);
+    lines.push('');
+  }
+
+  if(safety){
+    lines.push('Please seek urgent medical attention if any of the following develop:');
+    // Clean up safety netting text for patient use
+    var safetyClean = safety
+      .replace(/Seek urgent review or call NHS 24 \(111\) if any of the following develop:/i, '')
+      .replace(/•\s*/g, '— ')
+      .trim();
+    lines.push(safetyClean);
+    lines.push('');
+  }
+
+  if(followUp){
+    lines.push('Follow-up plan: ' + followUp);
+    lines.push('');
+  }
+
+  lines.push('If you have any questions, please contact us:');
+  lines.push(pharm + (pharmTel ? ' — Tel: ' + pharmTel : ''));
+  lines.push('');
+  lines.push('Your prescribing pharmacist: ' + ipName);
+
+  textEl.value = lines.join('\n');
+  output.style.display = 'block';
+  textEl.style.borderColor = 'var(--success-border)';
+  textEl.style.background = 'var(--success-bg)';
+  setTimeout(function(){ textEl.style.borderColor=''; textEl.style.background=''; }, 1500);
+}
+
+function copyPatientSummary(){
+  var textEl = document.getElementById('patientSummaryText');
+  if(!textEl || !textEl.value) return;
+  navigator.clipboard.writeText(textEl.value).then(function(){
+    var b = document.getElementById('copyPatientBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied!';
+    b.style.background = 'var(--success-text)';
+    b.style.color = '#fff';
+    setTimeout(function(){ b.innerHTML = orig; b.style.background = ''; b.style.color = ''; }, 2500);
+  }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value = textEl.value;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var b = document.getElementById('copyPatientBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied!';
+    setTimeout(function(){ b.innerHTML = orig; }, 2500);
+  });
+}
+
+// ── DARK MODE ─────────────────────────────────────────────────────────
+function toggleDarkMode(){
+  var html = document.documentElement;
+  var isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  var btn = document.getElementById('darkModeBtn');
+  if(btn) btn.textContent = isDark ? '🌙' : '☀️';
+  var meta = document.getElementById('themeColorMeta');
+  if(meta) meta.setAttribute('content', isDark ? '#ffffff' : '#1a1a1e');
+  try { localStorage.setItem('ipToolTheme', isDark ? 'light' : 'dark'); } catch(e){}
+}
+
+// Apply saved theme on load
+(function(){
+  try {
+    var saved = localStorage.getItem('ipToolTheme');
+    if(saved === 'dark'){
+      document.documentElement.setAttribute('data-theme','dark');
+      document.addEventListener('DOMContentLoaded', function(){
+        var btn = document.getElementById('darkModeBtn');
+        if(btn) btn.textContent = '☀️';
+        var meta = document.getElementById('themeColorMeta');
+        if(meta) meta.setAttribute('content','#1a1a1e');
+      });
+    }
+  } catch(e){}
+})();
+
+// ── PWA SERVICE WORKER ────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    // Inline service worker as a blob — no separate file needed
+    var swCode = [
+      "const CACHE='ip-tool-v3';",
+      "const ASSETS=['/'];",
+      "self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));",
+      "self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/')))));",
+    ].join('\n');
+    var blob = new Blob([swCode], {type:'application/javascript'});
+    var swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(function(){});
+  });
+}
+
+// PWA install prompt
+var _pwaInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _pwaInstallPrompt = e;
+  // Show a subtle install button in the header if not already installed
+  var installBtn = document.getElementById('pwaInstallBtn');
+  if(installBtn) installBtn.style.display = 'inline-flex';
+});
+
+function installPWA(){
+  if(!_pwaInstallPrompt) return;
+  _pwaInstallPrompt.prompt();
+  _pwaInstallPrompt.userChoice.then(function(){ _pwaInstallPrompt = null; });
+}
+
+// ── RED FLAG ACKNOWLEDGEMENT ─────────────────────────────────────────
+function getActiveRedFlags(){
+  var flags = [];
+  SYSTEMS.forEach(function(s){
+    (selFlag[s.key]||[]).forEach(function(flag){
+      flags.push({system: s.name, flag: flag, alert: (s.flagAlerts||{})[flag]||''});
+    });
+  });
+  return flags;
+}
+
+function updateRedFlagPanel(){
+  var flags = getActiveRedFlags();
+  var panel = document.getElementById('redFlagAckPanel');
+  var list  = document.getElementById('redFlagAckList');
+  if(!panel || !list) return;
+
+  if(!flags.length){
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  list.innerHTML = flags.map(function(f){
+    return '<div style="margin-bottom:5px;padding:5px 8px;background:var(--bg);border-radius:var(--radius);border:0.5px solid var(--danger-border)">'
+      + '<strong>' + f.system + ':</strong> ' + f.flag
+      + (f.alert ? '<div style="font-size:10px;margin-top:2px;opacity:.85">→ ' + f.alert + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function updateRedFlagAck(){
+  var warn = document.getElementById('redFlagAckWarning');
+  if(warn) warn.style.display = 'none';
+}
+
+function redFlagsAcknowledged(){
+  var flags = getActiveRedFlags();
+  if(!flags.length) return true; // no flags = no gate
+  var ack = document.getElementById('redFlagAckCheck');
+  var action = (document.getElementById('redFlagAction').value||'').trim();
+  return ack && ack.checked && action.length > 0;
 }
 
 // ── SBAR BUILDER ──
 function v(id){return(document.getElementById(id)||{}).value||'';}
 function buildSBAR(){
+  // Red flag gate — warn if unacknowledged flags exist
+  if(!redFlagsAcknowledged()){
+    var warn = document.getElementById('redFlagAckWarning');
+    if(warn) warn.style.display = 'block';
+    // Still generate SBAR but prepend urgent red flag notice
+    var flagNames = getActiveRedFlags().map(function(f){ return f.system+': '+f.flag; });
+    document.getElementById('sbarOutput').textContent =
+      '⚠ RED FLAGS DOCUMENTED — ACTION REQUIRED\n'
+      + flagNames.join('\n')
+      + '\n\nDocument and acknowledge action taken in the red flag panel above, then click Regenerate.\n'
+      + '\nThis SBAR has not been generated until red flags are acknowledged.';
+    return;
+  }
   const type=v('sbarType');
   const pt=(v('ptFirst')+' '+v('ptLast')).trim()||'[Patient name]';
   const dob=v('ptDob')||'[DOB]';const nhs=v('ptNHS')||'[NHS no.]';const sex=v('ptSex')||'[sex]';const pcode=v('ptPostcode')||'[postcode]';
@@ -4677,8 +5751,10 @@ function buildSBAR(){
     s+=NL+'Red flags identified ('+totalFlags+'):'+NL;
     SYSTEMS.forEach(ss=>(selFlag[ss.key]||[]).forEach(f=>{
       const act=ss.flagAlerts[f]||'';
-      s+='  [!] ['+ss.name+'] '+f+(act?NL+'    Action: '+act:'')+NL;
+      s+='  [!] ['+ss.name+'] '+f+(act?NL+'    Recommended action: '+act:'')+NL;
     }));
+    var rfAction = (document.getElementById('redFlagAction') ? document.getElementById('redFlagAction').value : '').trim();
+    if(rfAction) s+='  Action taken: '+rfAction+NL;
   }
   if(reasoning)s+=NL+'IP Clinical Reasoning & Prescribing Justification:'+NL+reasoning+NL;
   s+=NL+'-- RECOMMENDATION --'+NL;
@@ -4711,7 +5787,7 @@ function buildSBAR(){
   s+=NL+'For queries contact: '+ip+NL;
   s+='Pharmacy: '+pharm+'   '+pharmPhone+NL;
   s+=NL+HR;
-  s+='Generated: '+date+' '+time+' | IP Consultation Tool v3.0 | Community Pharmacy'+NL;
+  s+='Generated: '+date+' '+time+' | IP Consultation Tool v3.0 | Community Pharmacy | Consultation duration: '+getTimerValue()+NL;
   s+=NL+'DISCLAIMER: This document was generated with AI-assisted documentation support. The prescriber named above remains solely and professionally responsible for all clinical decisions. This record does not constitute a substitute for clinical judgement.'+NL;
   document.getElementById('sbarOutput').textContent=s;
 }
@@ -4850,7 +5926,7 @@ function runCompletenessCheck(){
     label: 'Clinical reasoning documented',
     pass: !!v('clinicalReasoning'),
     warn: true,
-    detail: v('clinicalReasoning') ? 'Clinical reasoning logged' : 'No IP reasoning logged — add in CJ Assist tab'
+    detail: v('clinicalReasoning') ? 'Clinical reasoning logged' : 'No IP reasoning logged — complete in Reasoning tab'
   });
 
   // ── GP DETAILS ──
@@ -4921,8 +5997,71 @@ function buildSummary(){
 }
 
 function copySBAR(){
-  navigator.clipboard.writeText(document.getElementById('sbarOutput').textContent).then(()=>{
-    const b=document.getElementById('copyBtn');const o=b.innerHTML;b.innerHTML='&#10003; Copied';setTimeout(()=>b.innerHTML=o,2000);
+  var text = document.getElementById('sbarOutput').textContent;
+  if(!text || text.indexOf('Complete consultation') === 0){
+    alert('Generate the SBAR first — click Regenerate.');
+    return;
+  }
+  navigator.clipboard.writeText(text).then(function(){
+    var b = document.getElementById('copyBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied!';
+    b.style.background = 'var(--success-text)';
+    b.style.color = '#fff';
+    setTimeout(function(){ b.innerHTML = orig; b.style.background = ''; b.style.color = ''; }, 2500);
+  }).catch(function(){
+    // Fallback for browsers that block clipboard without HTTPS
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var b = document.getElementById('copyBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied!';
+    setTimeout(function(){ b.innerHTML = orig; }, 2500);
+  });
+}
+
+function copySBARForPMR(){
+  // Strips the header/footer metadata — gives clean clinical text for pasting into PMR
+  var text = document.getElementById('sbarOutput').textContent;
+  if(!text || text.indexOf('Complete consultation') === 0){
+    alert('Generate the SBAR first — click Regenerate.');
+    return;
+  }
+  // Remove the generated timestamp line and disclaimer footer
+  var lines = text.split('\n');
+  var cleaned = lines.filter(function(l){
+    var lt = l.trim();
+    return lt.length > 0
+      && lt.indexOf('Generated:') !== 0
+      && lt.indexOf('DISCLAIMER:') !== 0
+      && lt.indexOf('IP Consultation Tool') === -1;
+  }).join('\n');
+  navigator.clipboard.writeText(cleaned).then(function(){
+    var b = document.getElementById('copyPMRBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied for PMR!';
+    b.style.background = 'var(--teal-text)';
+    b.style.color = '#fff';
+    setTimeout(function(){ b.innerHTML = orig; b.style.background = ''; b.style.color = ''; }, 2500);
+  }).catch(function(){
+    var ta = document.createElement('textarea');
+    ta.value = cleaned;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var b = document.getElementById('copyPMRBtn');
+    var orig = b.innerHTML;
+    b.innerHTML = '✓ Copied for PMR!';
+    setTimeout(function(){ b.innerHTML = orig; }, 2500);
   });
 }
 
@@ -5165,7 +6304,7 @@ function clearAll(){
   document.querySelectorAll('input,textarea').forEach(el=>el.value='');
   document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
   SYSTEMS.forEach(s=>{selSym[s.key]=[];selFlag[s.key]=[];});
-  selUrgency=null;cjHistory=[];lastCJText='';selContactIdx=null;
+  selUrgency=null;selContactIdx=null;_selectedFormularyDrug=null;resetConsultTimer();document.getElementById('safetyChecksPanel').style.display='none';
   ['999','Urgent','Routine','Self'].forEach(x=>{const el=document.getElementById('urg'+x);if(el)el.className='ubtn';});
   document.getElementById('selfcarePanel').style.display='none';
   const cr=document.getElementById('cjResponse');if(cr)cr.style.display='none';
@@ -6446,6 +7585,8 @@ function selectDrug(i){
   var matches = document.getElementById('formularyList')._matches;
   var d = matches ? matches[i] : null;
   if(!d)return;
+  // Store for use in auto-generate reasoning
+  _selectedFormularyDrug = d;
   document.getElementById('rxDrug').value = d.name;
   document.getElementById('rxIndication').value = d.indication||'';
   document.getElementById('rxDose').value = d.dose||'';
@@ -6465,6 +7606,8 @@ function selectDrug(i){
   var rx = document.getElementById('rxDrug');
   rx.style.borderColor='var(--success-border)';rx.style.background='var(--success-bg)';
   setTimeout(function(){rx.style.borderColor='';rx.style.background='';},1500);
+  // Run safety checks against patient medications and allergies
+  setTimeout(runSafetyChecks, 150);
 }
 
 renderSystems();

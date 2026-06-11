@@ -1,0 +1,24 @@
+{
+  "name": "IP Consultation Tool",
+  "short_name": "IP Tool",
+  "description": "Community Pharmacy Independent Prescriber Clinical Assessment & SBAR Generator",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0efe9",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%230c447c'/><text y='130' x='96' font-size='120' text-anchor='middle' font-family='system-ui'>⚕️</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='64' fill='%230c447c'/><text y='360' x='256' font-size='320' text-anchor='middle' font-family='system-ui'>⚕️</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["medical", "health", "productivity"],
+  "lang": "en-GB"
+}
