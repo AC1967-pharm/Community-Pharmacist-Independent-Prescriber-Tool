@@ -11,9 +11,19 @@
 <title>IP Consultation Tool v3.0 — Community Pharmacy</title>
 <style>
 :root{
-  --bg:#ffffff;--bg2:#f7f7f5;--bg3:#f0efe9;--border:#e2e0d8;--border2:#c8c6bc;
-  --text:#1a1a18;--text2:#5a5a56;--text3:#8a8a84;
-  --info-bg:#e6f1fb;--info-border:#b5d4f4;--info-text:#0c447c;
+  /* Clean NHS-inspired palette — blue accents, white breathing room */
+  --bg:#ffffff;            /* pure white cards and inputs */
+  --bg2:#f4f7fb;           /* very light blue-grey — alternating rows, obs cells */
+  --bg3:#edf2f7;           /* page background — barely-there blue-grey */
+  --border:#d0dce8;        /* subtle blue-grey border */
+  --border2:#b8cce0;       /* slightly stronger border */
+  --text:#1c2b3a;          /* near-black with blue undertone — readable body text */
+  --text2:#4a6074;         /* medium blue-grey — labels, secondary */
+  --text3:#7a96ab;         /* light blue-grey — placeholders, tertiary */
+  --primary:#005EB8;       /* NHS Blue */
+  --primary-text:#ffffff;
+  /* Status colours — untouched */
+  --info-bg:#e8f2fc;--info-border:#90bde0;--info-text:#004990;
   --danger-bg:#fcebeb;--danger-border:#f7c1c1;--danger-text:#a32d2d;
   --success-bg:#eaf3de;--success-border:#c0dd97;--success-text:#27500a;
   --warning-bg:#faeeda;--warning-border:#fac775;--warning-text:#633806;
@@ -22,9 +32,10 @@
   --radius:8px;--radius-lg:12px;
 }
 [data-theme="dark"]{
-  --bg:#1a1a1e;--bg2:#242428;--bg3:#131316;--border:#38383e;--border2:#4a4a52;
-  --text:#e8e8e4;--text2:#a8a8a2;--text3:#68686a;
-  --info-bg:#0d2340;--info-border:#1a4a7c;--info-text:#7ab8f5;
+  --bg:#111827;--bg2:#1a2535;--bg3:#0d1520;--border:#243447;--border2:#2e4560;
+  --text:#e2eaf3;--text2:#8aa8c4;--text3:#4a6a88;
+  --primary:#005EB8;--primary-text:#ffffff;
+  --info-bg:#0a2040;--info-border:#1a4a7c;--info-text:#7ab8f5;
   --danger-bg:#2d1515;--danger-border:#6b2020;--danger-text:#f08080;
   --success-bg:#132310;--success-border:#2a5018;--success-text:#8dc870;
   --warning-bg:#2a1e08;--warning-border:#7a4a08;--warning-text:#f0b860;
@@ -73,9 +84,9 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg3);color:var(--text);font-size:14px;line-height:1.5}
 .app{max-width:880px;margin:0 auto;padding:14px}
-.app-header{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.app-header h1{font-size:17px;font-weight:700}
-.app-header p{font-size:11px;color:var(--text2);margin-top:2px}
+.app-header{background:#005EB8;border:0.5px solid #003087;border-radius:var(--radius-lg);padding:14px 20px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.app-header h1{font-size:17px;font-weight:700;color:#ffffff}
+.app-header p{font-size:11px;color:#D8E8F8;margin-top:2px}
 .disclaimer-banner{background:#fff8e1;border:1.5px solid #f9a825;border-radius:var(--radius);padding:9px 14px;font-size:11.5px;color:#5d4037;margin-bottom:10px;display:flex;align-items:flex-start;gap:9px;line-height:1.5}
 .disclaimer-banner .db-icon{font-size:16px;flex-shrink:0;margin-top:1px}
 .disclaimer-banner strong{color:#e65100}
@@ -83,16 +94,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block}
 .badge-info{background:var(--info-bg);color:var(--info-text);border:0.5px solid var(--info-border)}
 .badge-success{background:var(--success-bg);color:var(--success-text);border:0.5px solid var(--success-border)}
-.step-tabs{display:flex;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;flex-wrap:wrap}
-.step-tab{flex:1;min-width:70px;padding:8px 4px;font-size:10px;font-weight:600;border:none;background:transparent;cursor:pointer;color:var(--text3);border-right:0.5px solid var(--border);transition:all .15s;text-align:center;line-height:1.3}
+.step-tabs{display:flex;background:#003087;border:0.5px solid #003087;border-radius:var(--radius-lg);overflow:hidden;margin-bottom:10px;flex-wrap:wrap}
+.step-tab{flex:1;min-width:70px;padding:8px 4px;font-size:10px;font-weight:600;border:none;background:transparent;cursor:pointer;color:#D8E8F8;border-right:0.5px solid rgba(255,255,255,.15);transition:all .15s;text-align:center;line-height:1.3}
 .step-tab:last-child{border-right:none}
-.step-tab.active{background:var(--bg2);color:var(--text)}
-.step-tab.done{color:var(--success-text)}
+.step-tab:hover{background:rgba(255,255,255,.12);color:#ffffff}
+.step-tab.active{background:#005EB8;color:#ffffff;font-weight:700}
+.step-tab.done{color:rgba(255,255,255,.65)}
+.step-tab.done.active{color:#ffffff}
 .step-tab .ti{font-size:15px;display:block;margin-bottom:2px}
 .step-panel{display:none}
 .step-panel.visible{display:block}
 .card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px 18px;margin-bottom:10px}
-h2{font-size:15px;font-weight:700;margin-bottom:10px}
+h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#005EB8}
+.card.card-blue{background:var(--bg2);border-color:var(--border)}
 h3{font-size:11px;font-weight:700;margin-bottom:6px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
 label{font-size:12px;color:var(--text2);display:block;margin-bottom:3px}
 input,select,textarea{width:100%;font-size:13px;font-family:inherit;color:var(--text);background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:7px 10px;transition:border-color .15s}
@@ -107,8 +121,8 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 .btn{padding:7px 14px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:12px;cursor:pointer;background:transparent;color:var(--text);font-family:inherit;transition:all .15s;font-weight:500}
 .btn:hover{background:var(--bg2)}
 .btn:active{transform:scale(.98)}
-.btn-primary{background:var(--text);color:var(--bg);border-color:var(--text)}
-.btn-primary:hover{opacity:.82;background:var(--text)}
+.btn-primary{background:#005EB8;color:#ffffff;border-color:#005EB8}
+.btn-primary:hover{opacity:.88;background:#005EB8}
 .btn-danger{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border)}
 .btn-purple{background:var(--purple-bg);color:var(--purple-text);border-color:var(--purple-border)}
 .btn-success{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border)}
@@ -119,11 +133,16 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 .pill-success{background:var(--success-bg);color:var(--success-text)}
 .pill-warning{background:var(--warning-bg);color:var(--warning-text)}
 .pill-purple{background:var(--purple-bg);color:var(--purple-text)}
-.sys-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:7px;margin-bottom:10px}
+.sys-grid{display:flex;flex-direction:column;gap:0;margin-bottom:10px}
 .sys-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:9px 11px;cursor:pointer;transition:all .15s}
 .sys-card:hover{border-color:var(--border2);background:var(--bg2)}
 .sys-card.expanded{border-color:#378add;background:var(--info-bg)}
 .sys-card.has-flags{border-color:var(--danger-border);background:var(--danger-bg)}
+.sys-card-linear{cursor:default;margin-bottom:8px!important}
+.sys-card-linear:hover{background:var(--bg)!important;border-color:var(--border)!important}
+.sys-card-linear.has-flags:hover{background:var(--danger-bg)!important;border-color:var(--danger-border)!important}
+.sys-card-linear .sys-top{cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.sys-card-linear .sys-top:hover{opacity:.85}
 .sys-top{display:flex;justify-content:space-between;align-items:flex-start}
 .sys-name{font-size:12px;font-weight:700}
 .sys-card.expanded .sys-name{color:var(--info-text)}
@@ -205,13 +224,61 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 .link-card.cks .lc-s{color:#00838f}
 .link-card.gb .lc-s{color:#e65100}
 .link-card.emc .lc-s{color:#6a1b9a}
-.info-bar{background:var(--teal-bg);border:0.5px solid var(--teal-border);border-radius:var(--radius);padding:8px 12px;font-size:11px;color:var(--teal-text);margin-bottom:10px}
+.info-bar{background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:8px 12px;font-size:11px;color:var(--info-text);margin-bottom:10px}
 @media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}.urgency-grid{grid-template-columns:1fr 1fr}.sum-grid{grid-template-columns:1fr 1fr}}
 @media print{.no-print,.step-tabs,.nav-row,.app-header,.cj-box,.info-bar{display:none!important}.app{max-width:100%;padding:0}body{background:#fff}.sbar-out{border:1px solid #ccc}}
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- ── LOGIN GATE ─────────────────────────────────────────────────── -->
+<div id="loginGate" style="position:fixed;inset:0;background:#edf2f7;display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px">
+  <div style="background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,60,120,.15);padding:40px 36px;max-width:420px;width:100%;text-align:center">
+
+    <!-- Logo / branding -->
+    <div style="font-size:42px;margin-bottom:10px">⚕️</div>
+    <h1 style="font-size:22px;font-weight:800;color:#003087;margin-bottom:4px">IP Consultation Tool</h1>
+    <p style="font-size:13px;color:#4a6074;margin-bottom:4px">Community Pharmacy — Clinical Assessment & SBAR Generator</p>
+
+    <!-- Pilot badge -->
+    <div style="display:inline-block;background:#005EB8;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;margin-bottom:28px;letter-spacing:.5px">🔬 PILOT STUDY ACCESS</div>
+
+    <!-- Login form -->
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="font-size:12px;font-weight:700;color:#4a6074;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Access code</label>
+      <input id="loginPassword" type="password" placeholder="Enter pilot access code"
+        style="width:100%;font-size:15px;padding:11px 14px;border:1.5px solid #d0dce8;border-radius:10px;font-family:inherit;color:#1c2b3a;background:#f4f7fb;outline:none;transition:border-color .2s"
+        onkeydown="if(event.key==='Enter') attemptLogin()"
+        onfocus="this.style.borderColor='#005EB8'" onblur="this.style.borderColor='#d0dce8'">
+    </div>
+
+    <button onclick="attemptLogin()"
+      style="width:100%;padding:13px;background:#005EB8;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s;margin-bottom:12px"
+      onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+      Access Tool →
+    </button>
+
+    <div id="loginError" style="display:none;background:#fcebeb;border:1px solid #f7c1c1;border-radius:8px;padding:9px 14px;font-size:12px;color:#a32d2d;margin-bottom:12px">
+      ⚠ Incorrect access code. Please check with the pilot study coordinator.
+    </div>
+
+    <!-- Info -->
+    <div style="background:#f4f7fb;border-radius:10px;padding:12px 14px;text-align:left;margin-top:4px">
+      <p style="font-size:11px;color:#4a6074;margin-bottom:5px;font-weight:700">Pilot study — important information</p>
+      <p style="font-size:11px;color:#7a96ab;line-height:1.6;margin:0">This tool is for use by invited GPhC-registered pharmacists only. <strong style="color:#4a6074">Do not enter real patient data</strong> during the pilot period. All test scenarios use fictitious patient details. This tool was developed independently by Adam Croke and is not affiliated with any employer.</p>
+    </div>
+
+    <!-- Footer -->
+    <p style="font-size:10px;color:#b8cce0;margin-top:18px">
+      Created by Adam Croke — GPhC-registered Pharmacist, Glasgow, Scotland<br>
+      v3.0 · Data remains local · Nothing transmitted externally
+    </p>
+
+  </div>
+</div>
+
+<!-- ── MAIN APP — hidden until authenticated ──────────────────────── -->
+<div class="app" id="mainApp" style="display:none">
 <div class="app-header">
   <div>
     <h1>&#x2695;&#xFE0F; IP Consultation Tool</h1>
@@ -219,10 +286,10 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <p style="font-size:10px;color:var(--text3);margin-top:3px">Created by <strong>Adam Croke</strong> — GPhC-registered Pharmacist, Glasgow, Scotland</p>
   </div>
   <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-    <button id="pwaInstallBtn" onclick="installPWA()" title="Install as app on your device" style="display:none;font-size:11px;padding:4px 9px;border:0.5px solid var(--success-border);border-radius:var(--radius);background:var(--success-bg);color:var(--success-text);cursor:pointer;font-weight:600;font-family:inherit">📲 Install</button>
-    <button onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle dark mode" style="font-size:14px;padding:4px 8px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg2);cursor:pointer;line-height:1">🌙</button>
-    <span class="badge badge-success">v3.0</span>
-    <span class="badge badge-info">Offline-ready</span>
+    <button id="pwaInstallBtn" onclick="installPWA()" title="Install as app on your device" style="display:none;font-size:11px;padding:4px 9px;border:0.5px solid rgba(255,255,255,.4);border-radius:var(--radius);background:rgba(255,255,255,.15);color:#ffffff;cursor:pointer;font-weight:600;font-family:inherit">📲 Install</button>
+    <button onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle dark mode" style="font-size:14px;padding:4px 8px;border:0.5px solid rgba(255,255,255,.35);border-radius:var(--radius);background:rgba(255,255,255,.12);cursor:pointer;line-height:1">🌙</button>
+    <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.2);color:#ffffff">v3.0</span>
+    <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.15);color:#D8E8F8">Offline-ready</span>
   </div>
 </div>
 
@@ -251,11 +318,11 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 <div id="progressBar" style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px">
   <div style="flex:1">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Consultation progress</span>
-      <span id="progressPct" style="font-size:11px;font-weight:700;color:var(--text3)">0%</span>
+      <span style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">Consultation progress</span>
+      <span id="progressPct" style="font-size:11px;font-weight:700;color:#005EB8">0%</span>
     </div>
     <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
-      <div id="progressFill" style="height:100%;width:0%;background:var(--success-text);border-radius:3px;transition:width .4s ease"></div>
+      <div id="progressFill" style="height:100%;width:0%;background:#005EB8;border-radius:3px;transition:width .4s ease"></div>
     </div>
   </div>
   <div id="progressSteps" style="display:flex;gap:3px;flex-shrink:0"></div>
@@ -671,7 +738,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     </div>
   </div>
 
-  <!-- Working diagnosis -->
+  <!-- Working + Definitive diagnosis -->
   <div class="g2" style="margin-bottom:10px">
     <div>
       <label>Working / primary diagnosis</label>
@@ -689,17 +756,32 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     </div>
   </div>
 
+  <!-- Definitive diagnosis -->
+  <div style="margin-bottom:10px;padding:10px 12px;background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:var(--radius)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+      <label style="margin:0;color:var(--success-text);font-weight:700;font-size:12px">✅ Definitive / confirmed diagnosis <span style="font-weight:400;font-size:11px">(complete once diagnosis is confirmed)</span></label>
+      <button onclick="copyWorkingToDefinitive()" class="btn" style="font-size:10px;padding:2px 8px;background:var(--success-bg);color:var(--success-text);border-color:var(--success-border)">← Copy from working</button>
+    </div>
+    <input id="definitiveDiagnosis" type="text" placeholder="e.g. Otitis externa (right) — confirmed on otoscopy, intact TM. Non-ototoxic topical treatment appropriate." style="border-color:var(--success-border);background:var(--bg)">
+  </div>
+
   <!-- Suggested differentials based on systems assessed -->
   <div style="margin-bottom:8px">
-    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">
-      Differentials considered <span style="font-weight:400;text-transform:none;letter-spacing:0">(tick all that apply — re-tick to remove)</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">
+        Differentials considered <span style="font-weight:400;text-transform:none;letter-spacing:0">(tick all that apply — re-tick to remove)</span>
+      </div>
+      <button id="noDifferentialBtn" onclick="markNoDifferential()" class="btn" style="font-size:10px;padding:2px 9px;background:var(--success-bg);color:var(--success-text);border-color:var(--success-border)">✓ Diagnosis confirmed — no differential</button>
+    </div>
+    <div id="noDifferentialBanner" style="display:none;padding:6px 10px;background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:var(--radius);font-size:11px;color:var(--success-text);font-weight:600;margin-bottom:6px">
+      ✅ Diagnosis confirmed — no differential diagnosis documented. <button onclick="clearNoDifferential()" style="font-size:10px;padding:1px 6px;border:0.5px solid var(--success-border);border-radius:5px;background:transparent;color:var(--success-text);cursor:pointer;font-family:inherit;margin-left:6px">Undo</button>
     </div>
     <div id="ddxSuggested" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
     <div id="ddxSelected" style="margin-top:6px;font-size:11px;color:var(--text3)"></div>
   </div>
 
   <!-- Diagnosis ruled out -->
-  <div style="margin-bottom:8px">
+  <div id="ddxRuledOutSection" style="margin-bottom:8px">
     <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Diagnoses actively excluded / ruled out</div>
     <input id="ddxRuledOut" type="text" placeholder="e.g. Malignant otitis externa (no diabetes, immunocompromised features or facial nerve involvement), cholesteatoma (TM visualised — no attic perforation or retraction)">
   </div>
@@ -809,7 +891,7 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   </div>
 
   <div class="g2">
-    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops" oninput="updateRxSafetyLinks();updateProgressBar();updateRxSummaryLine()"></div>
+    <div><label>Drug name (generic / brand)</label><input id="rxDrug" type="text" placeholder="e.g. Ciprofloxacin 0.3% / Dexamethasone 0.1% ear drops" oninput="updateRxSafetyLinks();updateProgressBar();updateRxSummaryLine();setTimeout(updateClinicalTools,300)"></div>
     <div><label>Indication</label><input id="rxIndication" type="text" placeholder="e.g. Otitis externa with perforated tympanic membrane"></div>
   </div>
   <div class="g4">
@@ -884,6 +966,9 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
     <textarea id="rxInteractions" placeholder="e.g. No significant interactions identified (BNF interactions checker). No monitoring required for this course." style="min-height:52px"></textarea>
   </div></div>
 
+  <!-- CLINICAL DECISION TOOLS — auto-appear based on context -->
+  <div id="clinicalToolsPanel" style="display:none;margin-top:8px"></div>
+
   <!-- INTERACTION & ALLERGY CHECKER -->
   <div id="safetyChecksPanel" style="display:none;margin-top:8px"></div>
 
@@ -944,6 +1029,9 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
   </div>
 </div>
 <div class="nav-row no-print"><button class="btn" onclick="goStep(4)">&#8592; Back</button><button class="btn btn-primary" onclick="goStep(6)">Next: clinical reasoning &#8594;</button></div>
+
+<!-- MEDICATION REVIEW PROMPT — appears when triggered by patient data -->
+<div id="medReviewPromptPanel" style="display:none;margin-top:0"></div>
 </div>
 
 <!-- STEP 6: CLINICAL REASONING SCRATCHPAD -->
@@ -1411,7 +1499,57 @@ textarea{resize:vertical;min-height:68px;line-height:1.55}
 </div>
 </div>
 
-</div><!-- end .app -->
+</div><!-- end .app / mainApp -->
+
+<script>
+// ── LOGIN GATE ────────────────────────────────────────────────────
+// SHA-256 of "IPPilot2026" — change by updating hash below
+var AUTH_HASH = '885f83bfba5eb9c001150c4dfd8b9b5b2fb2837d355fdf98c028d23f7590bb14';
+var SESSION_KEY = 'ipToolAuth_v3';
+
+async function hashPassword(str){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+async function attemptLogin(){
+  var pw  = document.getElementById('loginPassword').value;
+  var err = document.getElementById('loginError');
+  if(!pw){ err.style.display='block'; return; }
+  var h = await hashPassword(pw);
+  if(h === AUTH_HASH){
+    // Store session so reload doesn't re-prompt (sessionStorage clears on tab close)
+    try{ sessionStorage.setItem(SESSION_KEY, '1'); } catch(e){}
+    unlockTool();
+  } else {
+    err.style.display = 'block';
+    var inp = document.getElementById('loginPassword');
+    inp.value = '';
+    inp.style.borderColor = '#f7c1c1';
+    inp.style.background  = '#fcebeb';
+    setTimeout(function(){
+      inp.style.borderColor = '#d0dce8';
+      inp.style.background  = '#f4f7fb';
+    }, 1500);
+    inp.focus();
+  }
+}
+
+function unlockTool(){
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('mainApp').style.display   = 'block';
+  // Focus first field
+  var first = document.getElementById('ptFirst');
+  if(first) setTimeout(function(){ first.focus(); }, 100);
+}
+
+// Auto-unlock if already authenticated this session
+(function(){
+  try{
+    if(sessionStorage.getItem(SESSION_KEY) === '1') unlockTool();
+  } catch(e){}
+})();
+</script>
 
 <div style="max-width:900px;margin:12px auto 0;padding:14px 20px 18px;border-top:2px solid #c62828;font-size:10.5px;color:#c62828;line-height:1.6;text-align:center" class="no-print">
   <p style="margin:0 0 4px"><strong style="color:#b71c1c;font-size:11.5px">⚠ Clinical Disclaimer</strong></p>
@@ -3450,19 +3588,23 @@ function updateDDXFromDiagnosis(){
 }
 
 function getDDXForSBAR(){
-  var working = document.getElementById('workingDiagnosis') ? document.getElementById('workingDiagnosis').value.trim() : '';
+  var working    = document.getElementById('workingDiagnosis') ? document.getElementById('workingDiagnosis').value.trim() : '';
+  var definitive = document.getElementById('definitiveDiagnosis') ? document.getElementById('definitiveDiagnosis').value.trim() : '';
   var confidence = document.getElementById('diagConfidence') ? document.getElementById('diagConfidence').value : '';
   var considered = Array.from(_ddxSelected);
-  var ruledOut = document.getElementById('ddxRuledOut') ? document.getElementById('ddxRuledOut').value.trim() : '';
-  var investig = document.getElementById('ddxInvestigations') ? document.getElementById('ddxInvestigations').value.trim() : '';
-  var referral = document.getElementById('ddxReferral') ? document.getElementById('ddxReferral').value.trim() : '';
+  var noDiff     = getNoDifferential();
+  var ruledOut   = document.getElementById('ddxRuledOut') ? document.getElementById('ddxRuledOut').value.trim() : '';
+  var investig   = document.getElementById('ddxInvestigations') ? document.getElementById('ddxInvestigations').value.trim() : '';
+  var referral   = document.getElementById('ddxReferral') ? document.getElementById('ddxReferral').value.trim() : '';
 
   var lines = [];
-  if(working) lines.push('Working diagnosis: '+working+(confidence?' ('+confidence+')':''));
-  if(considered.length) lines.push('Differentials considered: '+considered.join(', '));
-  if(ruledOut) lines.push('Excluded: '+ruledOut);
-  if(investig) lines.push('Investigations: '+investig);
-  if(referral) lines.push('Referral decision: '+referral);
+  if(definitive) lines.push('CONFIRMED DIAGNOSIS: ' + definitive);
+  else if(working) lines.push('Working diagnosis: ' + working + (confidence ? ' (' + confidence + ')' : ''));
+  if(noDiff)              lines.push('Differential diagnosis: None — diagnosis confirmed clinically.');
+  else if(considered.length) lines.push('Differentials considered: ' + considered.join(', '));
+  if(!noDiff && ruledOut) lines.push('Excluded: ' + ruledOut);
+  if(investig) lines.push('Investigations: ' + investig);
+  if(referral) lines.push('Referral decision: ' + referral);
   return lines.length ? lines.join('\n') : '[Differential diagnosis not documented]';
 }
 
@@ -3656,6 +3798,44 @@ function prefillSOCRATES(focusId){
   updateProgressBar();
 }
 
+function copyWorkingToDefinitive(){
+  var working = v('workingDiagnosis') || '';
+  var conf    = v('diagConfidence') || '';
+  var el      = document.getElementById('definitiveDiagnosis');
+  if(!el) return;
+  el.value = working + (conf ? ' (' + conf.toLowerCase() + ')' : '');
+  flash(el);
+}
+
+function markNoDifferential(){
+  var banner = document.getElementById('noDifferentialBanner');
+  var suggested = document.getElementById('ddxSuggested');
+  var selected  = document.getElementById('ddxSelected');
+  var ruledOut  = document.getElementById('ddxRuledOutSection');
+  if(banner) banner.style.display = 'block';
+  if(suggested) suggested.style.display = 'none';
+  if(selected)  selected.style.display  = 'none';
+  if(ruledOut)  ruledOut.style.display  = 'none';
+  // Clear all selected differentials
+  _ddxSelected = new Set();
+  document.querySelectorAll('.ddx-pill.active').forEach(function(p){ p.classList.remove('active'); });
+}
+
+function clearNoDifferential(){
+  var banner   = document.getElementById('noDifferentialBanner');
+  var suggested = document.getElementById('ddxSuggested');
+  var selected  = document.getElementById('ddxSelected');
+  var ruledOut  = document.getElementById('ddxRuledOutSection');
+  if(banner)    banner.style.display    = 'none';
+  if(suggested) suggested.style.display = '';
+  if(selected)  selected.style.display  = '';
+  if(ruledOut)  ruledOut.style.display  = '';
+}
+
+function getNoDifferential(){
+  var banner = document.getElementById('noDifferentialBanner');
+  return banner && banner.style.display !== 'none';
+}
 function setConditionFocus(focusId){
   var focus = CONDITION_FOCUS.find(function(c){ return c.id === focusId; });
   if(!focus) return;
@@ -4106,7 +4286,168 @@ startConsultTimer();
 // severity: 'danger' (contraindicated/serious), 'warn' (caution/monitor)
 
 const INTERACTIONS = [
-  // ── Anticoagulants ──
+  // ── CYP2C19 — Clopidogrel (HIGH PRIORITY — commonly missed) ──
+  ['clopidogrel',
+   'omeprazole|esomeprazole|lansoprazole|rabeprazole|pantoprazole',
+   'warn', 'Clopidogrel + PPI (especially omeprazole/esomeprazole): PPIs inhibit CYP2C19, reducing conversion of clopidogrel to its active metabolite. Omeprazole and esomeprazole have the strongest effect. MHRA advises avoiding omeprazole/esomeprazole with clopidogrel where possible. Pantoprazole or rabeprazole are preferred alternatives if a PPI is needed. Clinical significance debated but MHRA recommends caution.'],
+  ['clopidogrel',
+   'fluoxetine|fluvoxamine|fluconazole|ticlopidine|ciprofloxacin|carbamazepine',
+   'warn', 'Clopidogrel + CYP2C19 inhibitor: these drugs inhibit CYP2C19 and may reduce clopidogrel\'s antiplatelet effect by reducing its activation. Consider alternative antiplatelet strategy or alternative to the interacting drug.'],
+  ['clopidogrel',
+   'aspirin',
+   'warn', 'Clopidogrel + aspirin (dual antiplatelet therapy): significantly increased bleeding risk. If dual antiplatelet therapy is intended (e.g. post-ACS, post-PCI), this is appropriate but note increased GI bleeding risk — PPI cover usually co-prescribed (avoid omeprazole — use pantoprazole/rabeprazole).'],
+
+  // ── CYP2C19 — broader class ──
+  ['omeprazole|esomeprazole',
+   'clopidogrel|ticagrelor',
+   'warn', 'Omeprazole/esomeprazole + antiplatelet: CYP2C19 inhibition reduces activation of clopidogrel (less relevant for ticagrelor). Use pantoprazole or rabeprazole if a PPI is required alongside clopidogrel. MHRA Drug Safety Update 2010.'],
+  ['omeprazole|esomeprazole|lansoprazole',
+   'methotrexate',
+   'warn', 'PPI + methotrexate: PPIs (especially omeprazole) may increase methotrexate plasma levels by inhibiting renal tubular secretion. Risk of methotrexate toxicity. Monitor for methotrexate side effects; discuss with rheumatology team.'],
+  ['omeprazole|esomeprazole',
+   'citalopram|escitalopram',
+   'warn', 'Omeprazole + citalopram/escitalopram: omeprazole inhibits CYP2C19, increasing plasma levels of citalopram and escitalopram. Risk of QT prolongation and dose-dependent adverse effects. Consider dose reduction of citalopram or switch to pantoprazole.'],
+
+  // ── Tramadol ── (BNF updated Dec 2023 — Coroner's report)
+  ['tramadol',
+   'warfarin|acenocoumarol|phenprocoumon',
+   'danger', 'Tramadol + warfarin: BNF (updated December 2023 following Coroner\'s report). Tramadol inhibits warfarin metabolism via CYP2D6/CYP3A4 and has independent anticoagulant properties. Clinically significant INR elevation reported — fatalities documented. Monitor INR closely if co-prescribed; advise patient to report bruising or unusual bleeding. Ref: Pharmaceutical Journal Dec 2023; BNF Appendix 1.'],
+  ['tramadol',
+   'sertraline|fluoxetine|paroxetine|citalopram|escitalopram|venlafaxine|duloxetine|mirtazapine|trazodone|clomipramine|amitriptyline|nortriptyline',
+   'danger', 'Tramadol + serotonergic drug: serious risk of serotonin syndrome. Both tramadol (weak SNRI/opioid) and antidepressants increase serotonergic tone. Symptoms: agitation, hyperthermia, tachycardia, tremor, myoclonus. Potentially fatal. Avoid combination if possible. If essential, use lowest effective dose, monitor closely, and counsel patient. Ref: BNF Appendix 1; Stockley\'s Drug Interactions 12th ed.'],
+  ['tramadol',
+   'diazepam|lorazepam|temazepam|nitrazepam|oxazepam|clonazepam|zopiclone|zolpidem|zaleplon|pregabalin|gabapentin|morphine|oxycodone|codeine|fentanyl|buprenorphine|methadone',
+   'danger', 'Tramadol + CNS depressant: additive CNS/respiratory depression. Risk of fatal respiratory depression particularly with benzodiazepines — MHRA Black Box warning. Several fatalities reported. Avoid co-prescription unless absolutely necessary; if combined, use lowest effective doses, monitor closely, and advise patient against alcohol. Ref: MHRA Drug Safety Update; BNF Appendix 1.'],
+
+  // ── QT Prolongation ── (CredibleMeds / Stockley's / BNF)
+  ['azithromycin|clarithromycin|erythromycin|ciprofloxacin|levofloxacin|moxifloxacin',
+   'amiodarone|dronedarone|sotalol|flecainide',
+   'danger', 'Antibiotic + antiarrhythmic: additive QT prolongation. Risk of potentially fatal Torsades de Pointes (TdP) arrhythmia. Azithromycin and moxifloxacin have the highest QT risk among common antibiotics. All fluoroquinolones carry QT risk. AVOID combination with Class I/III antiarrhythmics. Consider alternative antibiotic (e.g. amoxicillin, doxycycline). Check ECG if combination unavoidable. Ref: CredibleMeds; BNF Appendix 1; Stockley\'s.'],
+  ['azithromycin|clarithromycin|erythromycin|ciprofloxacin|levofloxacin|moxifloxacin',
+   'citalopram|escitalopram|sertraline|fluoxetine|paroxetine',
+   'warn', 'QT-prolonging antibiotic + SSRI: additive QT prolongation risk. Citalopram and escitalopram carry the highest QT risk among SSRIs (dose-dependent). Azithromycin and fluoroquinolones most likely to interact. Consider ECG monitoring in patients with risk factors (hypokalaemia, hypomagnesaemia, female sex, cardiac disease). Alternative antibiotics or SSRIs where possible. Ref: CredibleMeds; MHRA DSU; Stockley\'s.'],
+  ['azithromycin|clarithromycin|erythromycin|ciprofloxacin|levofloxacin|moxifloxacin',
+   'quetiapine|haloperidol|chlorpromazine|amisulpride|risperidone|olanzapine',
+   'danger', 'QT-prolonging antibiotic + antipsychotic: major additive QT prolongation. Quetiapine, amisulpride, and haloperidol carry significant QT risk. Risk of Torsades de Pointes and cardiac arrest. Avoid azithromycin, moxifloxacin, and fluoroquinolones in these patients. Use amoxicillin or doxycycline where clinically appropriate. If unavoidable: ECG monitoring, correct electrolytes. Ref: CredibleMeds; BNF; Stockley\'s.'],
+  ['citalopram|escitalopram',
+   'amiodarone|dronedarone|sotalol|flecainide|azithromycin|moxifloxacin',
+   'danger', 'Citalopram/escitalopram + QT-prolonging drug: citalopram and escitalopram cause dose-dependent QT prolongation. Combination with other QT-prolonging drugs significantly increases TdP risk. MHRA maximum doses: citalopram 40mg (20mg if >65yrs, hepatic impairment), escitalopram 20mg (10mg if >65yrs). Avoid co-prescribing QT-prolonging drugs. Ref: MHRA DSU citalopram 2011/2014; BNF.'],
+
+  // ── Serotonin Syndrome ── (Stockley's 12th ed / BNF)
+  ['sertraline|fluoxetine|paroxetine|citalopram|escitalopram|venlafaxine|duloxetine',
+   'linezolid|methylene blue',
+   'danger', 'SSRI/SNRI + linezolid or methylene blue: CONTRAINDICATED. Both linezolid and methylene blue are MAO inhibitors — combination with serotonergic drugs causes potentially fatal serotonin syndrome. Do not co-prescribe. Minimum 2-week washout after stopping MAOI before starting serotonergic drug (5 weeks for fluoxetine due to long half-life). Ref: BNF Appendix 1; Stockley\'s Drug Interactions.'],
+  ['sertraline|fluoxetine|paroxetine|citalopram|escitalopram|venlafaxine|duloxetine|mirtazapine',
+   'fentanyl|pethidine|dextromethorphan|tapentadol',
+   'warn', 'SSRI/SNRI + serotonergic opioid: risk of serotonin syndrome. Fentanyl, pethidine, and dextromethorphan (found in many OTC cough preparations) have serotonergic properties. Monitor for serotonin syndrome symptoms: agitation, tremor, myoclonus, hyperthermia, diaphoresis, tachycardia. Ref: BNF Appendix 1; Stockley\'s.'],
+  ['sertraline|fluoxetine|paroxetine|citalopram|escitalopram|venlafaxine|duloxetine',
+   'ibuprofen|naproxen|diclofenac|aspirin|celecoxib|etoricoxib|mefenamic|indometacin|piroxicam',
+   'warn', 'SSRI/SNRI + NSAID: significantly increased risk of GI bleeding (2-3× compared to either drug alone, up to 15× vs neither). SSRIs inhibit platelet serotonin uptake, impairing primary haemostasis. NSAIDs cause direct GI mucosal injury. Consider PPI gastroprotection (use pantoprazole/rabeprazole if patient also on clopidogrel). Use paracetamol instead of NSAID where possible. Ref: Right Decisions Scotland; BNF; Stockley\'s.'],
+
+  // ── ACE inhibitors / ARBs + potassium ── (BNF / Stockley's)
+  ['ramipril|lisinopril|enalapril|perindopril|captopril|trandolapril|quinapril|fosinopril',
+   'spironolactone|eplerenone|amiloride|triamterene',
+   'danger', 'ACE inhibitor + potassium-sparing diuretic: risk of severe, potentially fatal hyperkalaemia. Particularly dangerous in elderly patients, diabetics, and those with CKD. Monitor potassium within 1–2 weeks of starting/changing either drug. Avoid combination unless specialist-initiated with close monitoring. Ref: BNF Appendix 1; NICE CG182; Stockley\'s.'],
+  ['losartan|candesartan|irbesartan|valsartan|olmesartan|telmisartan',
+   'spironolactone|eplerenone|amiloride|triamterene',
+   'danger', 'ARB + potassium-sparing diuretic: as per ACE inhibitor — severe hyperkalaemia risk. ARB + spironolactone combination is common in heart failure but requires close potassium monitoring. Not appropriate to initiate in community pharmacy without specialist input. Ref: BNF; NICE CG187; Stockley\'s.'],
+  ['ramipril|lisinopril|enalapril|perindopril|captopril|losartan|candesartan|irbesartan|valsartan|olmesartan',
+   'potassium chloride|potassium citrate',
+   'warn', 'ACE inhibitor/ARB + potassium supplement: additive hyperkalaemia risk. Monitor potassium particularly in elderly patients or those with renal impairment. Potassium citrate (used in cystitis sachets) adds meaningful potassium load. Ref: BNF Appendix 1.'],
+
+  // ── Benzodiazepines / CNS depressants ── (MHRA 2020 / BNF)
+  ['diazepam|lorazepam|temazepam|nitrazepam|oxazepam|clonazepam|zopiclone|zolpidem',
+   'morphine|oxycodone|codeine|dihydrocodeine|fentanyl|buprenorphine|methadone|tramadol',
+   'danger', 'Benzodiazepine + opioid: MHRA Boxed Warning (2020). Additive CNS and respiratory depression — risk of fatal respiratory arrest. Multiple fatalities reported. Avoid concomitant use unless no alternative. If combined: lowest doses, shortest duration, monitor closely, naloxone prescribed. Advise patient to avoid alcohol. Ref: MHRA DSU February 2020; BNF; Stockley\'s.'],
+  ['pregabalin|gabapentin',
+   'morphine|oxycodone|codeine|dihydrocodeine|fentanyl|buprenorphine|methadone|tramadol|diazepam|lorazepam|temazepam|zopiclone',
+   'danger', 'Pregabalin/gabapentin + opioid or benzodiazepine: MHRA warning 2017/2021. Pregabalin and gabapentin enhance opioid/BZD respiratory depression. Risk of fatal respiratory depression increased 3–4 fold. MHRA recommends caution with co-prescription. Ref: MHRA DSU October 2017, November 2021; BNF.'],
+
+  // ── Lithium ── (BNF / Stockley's — narrow TI)
+  ['lithium',
+   'ramipril|lisinopril|enalapril|perindopril|captopril|losartan|candesartan|irbesartan|valsartan',
+   'danger', 'Lithium + ACE inhibitor/ARB: ACE inhibitors and ARBs reduce lithium renal excretion, causing potentially toxic lithium accumulation. Lithium toxicity symptoms: tremor, confusion, nausea, seizures, arrhythmias. Monitor lithium levels within 1 week if ACE inhibitor/ARB is added or dose changed. Ref: BNF Appendix 1; Stockley\'s Drug Interactions.'],
+  ['lithium',
+   'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|indometacin',
+   'danger', 'Lithium + NSAID: NSAIDs reduce renal lithium clearance — lithium levels can rise 25–50%. Risk of lithium toxicity. Avoid NSAIDs in patients on lithium; use paracetamol instead. If NSAID necessary, check lithium levels within 5 days and adjust dose. Ref: BNF Appendix 1; Stockley\'s Drug Interactions.'],
+  ['lithium',
+   'furosemide|bendroflumethiazide|indapamide|hydrochlorothiazide',
+   'danger', 'Lithium + diuretic: thiazide and loop diuretics reduce renal lithium clearance, causing lithium accumulation and toxicity. Thiazides especially dangerous. Check lithium level within 1 week if diuretic added or dose changed. Sodium depletion worsens lithium retention. Ref: BNF; Stockley\'s.'],
+  ['lithium',
+   'haloperidol|quetiapine|olanzapine|risperidone|amisulpride',
+   'warn', 'Lithium + antipsychotic: enhanced risk of neurotoxicity — confusion, tremor, extrapyramidal effects, even at therapeutic lithium levels. QT prolongation additive risk. Monitor for signs of toxicity. If combination needed, use lowest effective doses and monitor lithium levels. Ref: BNF Appendix 1; Stockley\'s.'],
+
+  // ── Statins ── (BNF / Stockley's)
+  ['atorvastatin|simvastatin|rosuvastatin|pravastatin|fluvastatin|pitavastatin',
+   'ciclosporin|cyclosporin',
+   'danger', 'Statin + ciclosporin: ciclosporin markedly raises statin plasma levels via CYP3A4 and OATP1B1 inhibition. Serious risk of myopathy and rhabdomyolysis. Most statins are contraindicated with ciclosporin. Pravastatin preferred (less interaction) at low doses. Rosuvastatin max 10mg. Specialist review required. Ref: BNF; Stockley\'s Drug Interactions.'],
+  ['simvastatin|atorvastatin',
+   'amiodarone|dronedarone',
+   'warn', 'Simvastatin/atorvastatin + amiodarone: amiodarone inhibits CYP3A4 — simvastatin levels increase significantly. Simvastatin maximum 20mg with amiodarone (MHRA advice). Atorvastatin: dose reduction recommended. Monitor for myopathy (muscle pain/weakness). Consider rosuvastatin or pravastatin as alternatives. Ref: MHRA DSU 2012; BNF.'],
+  ['simvastatin',
+   'verapamil|diltiazem|amlodipine',
+   'warn', 'Simvastatin + calcium channel blocker: verapamil and diltiazem inhibit CYP3A4, raising simvastatin levels. Max simvastatin 20mg with verapamil or diltiazem. Amlodipine milder effect (max 20mg simvastatin). Monitor for myopathy. Ref: MHRA 2012; BNF.'],
+  ['atorvastatin|simvastatin|rosuvastatin',
+   'fusidic acid|sodium fusidate',
+   'danger', 'Statin + fusidic acid (systemic): CONTRAINDICATED. Serious risk of rhabdomyolysis — multiple fatalities reported. Fusidic acid inhibits statin hepatic uptake. MHRA advises stopping statin during course of systemic fusidic acid and for 7 days after. Topical fusidic acid (skin preparations) not thought to cause this interaction. Ref: MHRA DSU August 2012; BNF.'],
+  ['atorvastatin|simvastatin',
+   'clarithromycin|erythromycin',
+   'warn', 'Statin + macrolide: clarithromycin and erythromycin strongly inhibit CYP3A4, increasing atorvastatin/simvastatin levels significantly. Risk of myopathy and rhabdomyolysis. Consider suspending statin for the duration of the antibiotic course, or switch to azithromycin (less CYP3A4 inhibition). Ref: BNF; Stockley\'s.'],
+
+  // ── Antiepileptics ── (BNF / Stockley's)
+  ['carbamazepine|phenytoin|phenobarbital|primidone',
+   'hormonal contraception|levonorgestrel|desogestrel|norethisterone|ethinylestradiol',
+   'warn', 'Enzyme-inducing antiepileptic + hormonal contraceptive: carbamazepine, phenytoin, and phenobarbital strongly induce CYP3A4 — reduce plasma concentrations of oestrogens and progestogens, risking contraceptive failure. POPs (including desogestrel/Cerazette) are NOT reliably effective. Use barrier method or consider LARC. Seek specialist advice on contraception. Ref: FSRH guidance; BNF; Stockley\'s.'],
+  ['carbamazepine|phenytoin|phenobarbital',
+   'warfarin|apixaban|rivaroxaban|edoxaban',
+   'danger', 'Enzyme-inducing antiepileptic + anticoagulant: carbamazepine, phenytoin, and phenobarbital induce warfarin metabolism — significantly reduces anticoagulant effect. Also reduces DOAC levels. Risk of thromboembolic events. INR monitoring essential; dose adjustments needed. DOACs unreliable with enzyme inducers — specialist review required. Ref: BNF; Stockley\'s.'],
+  ['carbamazepine|phenytoin|oxcarbazepine|lamotrigine|valproate|levetiracetam',
+   'clarithromycin|erythromycin|fluconazole|voriconazole',
+   'warn', 'Antiepileptic + CYP inhibitor: these antifungals/antibiotics inhibit CYP2C19/3A4 — can raise plasma levels of antiepileptics, risking toxicity (ataxia, diplopia, nystagmus, drowsiness). Monitor for signs of toxicity. Lamotrigine levels also affected by valproate. Ref: BNF Appendix 1; Stockley\'s.'],
+
+  // ── Diabetes / hypoglycaemia ── (BNF / Stockley's)
+  ['metformin',
+   'iodinated contrast|diatrizoate|iohexol|iopamidol',
+   'warn', 'Metformin + iodinated contrast media: risk of acute kidney injury following contrast, which can precipitate metformin-associated lactic acidosis (rare but serious). MHRA advises withholding metformin from the time of contrast administration and for 48 hours after. Restart only when renal function confirmed stable. Ref: MHRA DSU; RCR guidelines.'],
+  ['insulin|glargine|detemir|degludec|aspart|lispro|human insulin',
+   'ciprofloxacin|levofloxacin|moxifloxacin',
+   'warn', 'Insulin + fluoroquinolone: fluoroquinolones can cause dysglycaemia — both hypoglycaemia and hyperglycaemia reported, sometimes severe. Monitor blood glucose closely. Advise diabetic patients to monitor more frequently. Ref: MHRA DSU July 2018; BNF.'],
+  ['gliclazide|glipizide|glimepiride|tolbutamide|glibenclamide',
+   'fluconazole|voriconazole|miconazole',
+   'danger', 'Sulfonylurea + azole antifungal: azole antifungals inhibit CYP2C9, markedly increasing sulfonylurea plasma levels. Severe and prolonged hypoglycaemia reported. Miconazole oral gel is a particular risk — absorbed systemically. Use topical antifungals where possible. Monitor blood glucose closely if combination essential. Ref: BNF; Stockley\'s Drug Interactions.'],
+
+  // ── Respiratory / anti-infective ── (BNF / Stockley's)
+  ['rifampicin',
+   'warfarin|apixaban|rivaroxaban|edoxaban|dabigatran',
+   'danger', 'Rifampicin + anticoagulant: rifampicin is the most potent enzyme inducer in clinical use. Markedly reduces plasma levels of all anticoagulants — warfarin INR can fall by 80%, DOACs to subtherapeutic levels. Thromboembolic events documented. Monitor INR/anticoagulant effect within 5 days of starting/stopping rifampicin. Specialist review essential. Ref: BNF Appendix 1; Stockley\'s.'],
+  ['rifampicin',
+   'hormonal contraception|levonorgestrel|desogestrel|norethisterone|ethinylestradiol',
+   'danger', 'Rifampicin + hormonal contraceptive: rifampicin is the most potent inducer — renders all forms of hormonal contraception (pill, patch, ring, POP, implant) unreliable. Use alternative effective contraception (copper IUD, condoms) during treatment and for 28 days after stopping rifampicin. Ref: FSRH; BNF; Stockley\'s.'],
+
+  // ── Miconazole ── (commonly dispensed OTC — high risk)
+  ['miconazole',
+   'warfarin|acenocoumarol',
+   'danger', 'Miconazole (oral gel) + warfarin: SERIOUS — even topical miconazole oral gel is significantly absorbed and potently inhibits CYP2C9, causing dangerous warfarin potentiation. Several deaths reported. INR can triple or more. Do NOT use miconazole oral gel in patients on warfarin — use nystatin oral suspension instead. Ref: MHRA DSU; BNF; Stockley\'s Drug Interactions.'],
+  ['miconazole',
+   'gliclazide|glipizide|glimepiride|tolbutamide|glibenclamide',
+   'danger', 'Miconazole oral gel + sulfonylurea: severe and prolonged hypoglycaemia documented — even topical oral gel absorbed systemically. Use nystatin instead. Monitor blood glucose closely. Ref: MHRA; BNF; Stockley\'s.'],
+
+  // ── Herbal medicines ── (Stockley's / MHRA)
+  ['st john\'s wort|hypericum',
+   'warfarin|apixaban|rivaroxaban|edoxaban|ssri|sertraline|fluoxetine|paroxetine|citalopram|escitalopram|ciclosporin|tacrolimus|hormonal contraception|levonorgestrel|desogestrel',
+   'danger', 'St John\'s Wort: potent CYP3A4 inducer and P-glycoprotein inducer. Significantly reduces plasma levels of warfarin, DOACs, SSRIs, ciclosporin, tacrolimus, and hormonal contraceptives. Also risks serotonin syndrome when combined with SSRIs. MHRA advises against co-prescription with any of these drugs. Ref: MHRA; Stockley\'s Drug Interactions; BNF.'],
+
+  // ── SGLT-2 inhibitors ── (MHRA / BNF)
+  ['dapagliflozin|empagliflozin|canagliflozin|ertugliflozin',
+   'furosemide|bendroflumethiazide|indapamide|hydrochlorothiazide|spironolactone',
+   'warn', 'SGLT-2 inhibitor + diuretic: additive dehydration and volume depletion risk. Risk of acute kidney injury, postural hypotension, and euglycaemic DKA. SGLT-2 inhibitors should be stopped during illness, fasting, or dehydration (sick day rules). If starting or changing diuretics: monitor renal function and blood pressure. Ref: MHRA DSU; SIGN 116.'],
+
+  // ── Antiplatelet combinations ──
+  ['aspirin',
+   'ibuprofen|naproxen|diclofenac',
+   'warn', 'Aspirin (antiplatelet) + NSAID: ibuprofen and naproxen can block aspirin\'s irreversible platelet inhibition, reducing cardioprotective effect. Ibuprofen especially — take aspirin at least 2 hours before ibuprofen. Also additive GI bleeding risk. Use paracetamol for analgesia. Ref: MHRA DSU 2015; BNF.'],
+
+  // ── Existing rules ──
   ['warfarin',    'aspirin|ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|meloxicam|ketoprofen|mefenamic|piroxicam|indomethacin',
    'danger', 'Warfarin + NSAID: significantly increased bleeding risk. NSAIDs inhibit platelet function and can cause GI bleeding. Use paracetamol for analgesia. If NSAID essential, INR monitoring required.'],
   ['warfarin',    'clarithromycin|erythromycin|metronidazole|fluconazole|ciprofloxacin|levofloxacin|doxycycline|trimethoprim|co-trimoxazole',
@@ -4337,24 +4678,42 @@ function runSafetyChecks(){
   alerts.sort(function(a,b){ return a.sev==='danger'&&b.sev!=='danger'?-1:1; });
 
   panel.style.display = 'block';
-  panel.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);margin-bottom:5px">&#128681; Safety checks — '+alerts.length+' alert'+(alerts.length>1?'s':'')+' detected</div>'
+  panel.innerHTML = '<div style="background:var(--danger-bg);border:2px solid var(--danger-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">'
+    +'<div style="display:flex;align-items:center;gap:7px">'
+    +'<span style="font-size:18px">🚨</span>'
+    +'<strong style="font-size:13px;color:var(--danger-text)">'+alerts.length+' interaction alert'+(alerts.length>1?'s':'')+' — verify before prescribing</strong>'
+    +'</div>'
+    +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+    +'<a href="https://bnf.nice.org.uk/interaction/" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;padding:3px 9px;background:var(--info-bg);color:var(--info-text);border:0.5px solid var(--info-border);border-radius:5px;text-decoration:none">BNF Interactions ↗</a>'
+    +'<a href="https://www.medicinescomplete.com/#/search/stockley/" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;padding:3px 9px;background:var(--purple-bg);color:var(--purple-text);border:0.5px solid var(--purple-border);border-radius:5px;text-decoration:none">Stockley\'s ↗</a>'
+    +'<a href="https://www.sps.nhs.uk/" target="_blank" rel="noopener" style="font-size:11px;font-weight:700;padding:3px 9px;background:var(--teal-bg);color:var(--teal-text);border:0.5px solid var(--teal-border);border-radius:5px;text-decoration:none">SPS ↗</a>'
+    +'</div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--danger-text);margin-top:5px">⬆ Verify each interaction below against current patient medications documented in the <strong>Patient tab — Medications section</strong>. These are decision support alerts — not a substitute for independent clinical check.</div>'
+    +'</div>'
     + alerts.map(function(a){
         var bg   = a.sev==='danger' ? 'var(--danger-bg)'   : 'var(--warning-bg)';
         var bord = a.sev==='danger' ? 'var(--danger-border)': 'var(--warning-border)';
         var col  = a.sev==='danger' ? 'var(--danger-text)'  : 'var(--warning-text)';
         var icon = a.sev==='danger' ? '🚨' : '⚠️';
         var badge= a.sev==='danger' ? 'CONTRAINDICATED / SERIOUS' : 'CAUTION — MONITOR';
+        // Extract reference from end of message
+        var refMatch = a.msg.match(/Ref: (.+?)\.?\s*$/);
+        var refText  = refMatch ? refMatch[1] : '';
+        var msgText  = refText ? a.msg.substring(0, a.msg.lastIndexOf('Ref:')) : a.msg;
         return '<div style="background:'+bg+';border:1.5px solid '+bord+';border-radius:var(--radius);padding:10px 12px;margin-bottom:6px">'
           +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">'
           +'<span style="font-size:16px">'+icon+'</span>'
           +'<span style="font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;background:'+bord+';color:#fff">'+badge+'</span>'
           +'<span style="font-size:10px;color:'+col+';opacity:.8">'+a.type.toUpperCase()+'</span>'
           +'</div>'
-          +'<div style="font-size:12px;color:'+col+';line-height:1.5;margin-bottom:3px">'+a.msg+'</div>'
-          +'<div style="font-size:10px;color:'+col+';opacity:.75">'+a.detail+'</div>'
+          +'<div style="font-size:12px;color:'+col+';line-height:1.55;margin-bottom:3px">'+msgText+'</div>'
+          +(refText ? '<div style="font-size:10px;color:'+col+';opacity:.8;font-style:italic">📚 '+refText+'</div>' : '')
+          +'<div style="font-size:10px;color:'+col+';opacity:.75;margin-top:2px">Detected: '+a.detail+'</div>'
           +'</div>';
       }).join('')
-    + '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-style:italic">These alerts are clinical decision support aids — they do not replace independent clinical judgement. Always verify using the BNF interactions checker and eMC SPC.</div>';
+    + '<div style="font-size:10px;color:var(--text3);margin-top:4px;font-style:italic">Sources: BNF Appendix 1, Stockley\'s Drug Interactions (2025), MHRA Drug Safety Updates, SPS. These alerts are decision support aids — always verify independently before prescribing.</div>';
 
   // Auto-populate interactions field if it's empty
   var rxInt = document.getElementById('rxInteractions');
@@ -4376,6 +4735,10 @@ document.addEventListener('DOMContentLoaded', function(){
     if(el) el.addEventListener('input', function(){
       clearTimeout(el._complexTimer);
       el._complexTimer = setTimeout(calcComplexity, 600);
+      clearTimeout(el._clinTimer);
+      el._clinTimer = setTimeout(updateClinicalTools, 700);
+      clearTimeout(el._mrTimer);
+      el._mrTimer = setTimeout(buildMedReviewPrompt, 700);
     });
   });
   ['rxDrug','ptMeds','ptAllergies'].forEach(function(id){
@@ -4858,6 +5221,567 @@ function copyGPLetter(){
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// CLINICAL DECISION TOOLS
+// Features: 1-Renal flags  2-Paediatric dose  4-Pregnancy flags
+//           5-FeverPAIN    6-PHQ-9/GAD-7      7-Skin ABCDE
+//           8-Inhaler      12-FRAX prompt      13-CVD/QRISK
+//           14-Medication review prompt
+// ═══════════════════════════════════════════════════════════════════
+
+// ── RENAL DOSE FLAGS ──────────────────────────────────────────────
+var RENAL_FLAGS = {
+  'nitrofurantoin':  {threshold:'eGFR <45 ml/min', action:'CONTRAINDICATED — use trimethoprim or fosfomycin instead (check renal dose)', severity:'danger'},
+  'metformin':       {threshold:'eGFR <30 ml/min', action:'Contraindicated. eGFR 30-45: use with caution, review if deteriorating. MHRA: withhold if acute illness or contrast.', severity:'warn'},
+  'trimethoprim':    {threshold:'eGFR <15 ml/min', action:'Avoid if possible. If essential: use 50% of normal dose. Also raises serum creatinine (competes tubular secretion) — not true deterioration.', severity:'warn'},
+  'atenolol':        {threshold:'eGFR <15 ml/min', action:'Dose reduction required. Use with caution — renally cleared. Monitor HR and symptoms.', severity:'warn'},
+  'digoxin':         {threshold:'any CKD',          action:'Renally cleared — narrow therapeutic index. Dose reduction required in all degrees of CKD. Monitor digoxin levels and HR. Ref: BNF Appendix 3.', severity:'warn'},
+  'aciclovir':       {threshold:'eGFR <10 ml/min',  action:'Dose reduction required (systemic). IV aciclovir requires significant reduction. Topical/cream: no adjustment.', severity:'warn'},
+  'codeine':         {threshold:'eGFR <10 ml/min',  action:'Avoid in severe renal impairment — risk of opioid toxicity (accumulation of active metabolite morphine-6-glucuronide).', severity:'warn'},
+  'gabapentin':      {threshold:'eGFR <30 ml/min',  action:'Dose reduction required at all levels of renal impairment. Dose by eGFR band — see BNF Appendix 3. Risk of CNS toxicity.', severity:'warn'},
+  'pregabalin':      {threshold:'eGFR <60 ml/min',  action:'Dose reduction required. Max dose by eGFR: 60-89: 300mg, 30-59: 150mg, 15-29: 75mg, <15: 25mg daily. Ref: BNF Appendix 3.', severity:'warn'},
+  'spironolactone':  {threshold:'eGFR <30 ml/min',  action:'Use with caution — risk of dangerous hyperkalaemia in moderate-severe CKD. Monitor potassium closely. Avoid in severe CKD unless specialist-initiated.', severity:'warn'},
+  'lithium':         {threshold:'any CKD',           action:'Renally cleared — any reduction in renal function raises lithium levels. Monitor lithium levels closely. Seek specialist advice before prescribing in CKD.', severity:'danger'},
+  'NSAID|ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|mefenamic|indometacin': {threshold:'CKD (any stage)', action:'NSAIDs reduce renal prostaglandin synthesis — can cause acute kidney injury, fluid retention, and accelerate CKD progression. Avoid in CKD if possible. Use paracetamol instead. Ref: BNF.', severity:'danger'},
+};
+
+// ── PREGNANCY PRESCRIBING FLAGS ───────────────────────────────────
+var PREGNANCY_FLAGS = {
+  'trimethoprim':    {trimester:'First trimester',  risk:'Folate antagonist — risk of neural tube defects. Avoid in first trimester. Use nitrofurantoin or cefalexin instead for UTI.', severity:'danger'},
+  'nitrofurantoin':  {trimester:'Term (≥36 weeks)', risk:'Risk of neonatal haemolytic anaemia (G6PD). Avoid at term. Use cefalexin or pivmecillinam instead.', severity:'danger'},
+  'co-amoxiclav':    {trimester:'All trimesters',   risk:'Associated with neonatal necrotising enterocolitis in preterm labour (ORACLE II trial). Use amoxicillin alone unless polymicrobial infection confirmed.', severity:'warn'},
+  'ibuprofen|naproxen|diclofenac|celecoxib|etoricoxib|indometacin|mefenamic': {trimester:'All trimesters, especially ≥30 weeks', risk:'NSAIDs: avoid in pregnancy especially from 20 weeks. Risk of premature closure of ductus arteriosus, oligohydramnios, neonatal renal impairment. Use paracetamol instead. Ref: MHRA September 2023.', severity:'danger'},
+  'codeine|dihydrocodeine|tramadol': {trimester:'All trimesters', risk:'Opioids: risk of neonatal opioid withdrawal syndrome. Codeine contraindicated near term. Use paracetamol; escalate to specialist if stronger analgesia needed.', severity:'danger'},
+  'doxycycline|tetracycline|lymecycline|minocycline': {trimester:'All trimesters', risk:'Tetracyclines: cause tooth discolouration and bone growth inhibition in foetus. Contraindicated in pregnancy. Use erythromycin or amoxicillin instead.', severity:'danger'},
+  'methotrexate':    {trimester:'All trimesters',   risk:'Teratogenic — major foetal malformations (skull, CNS, cardiovascular). Absolutely contraindicated. Effective contraception required. Consult rheumatology/dermatology urgently.', severity:'danger'},
+  'isotretinoin':    {trimester:'All trimesters',   risk:'Highly teratogenic — major foetal abnormalities. Absolutely contraindicated. Pregnancy prevention programme required. Consult dermatology.', severity:'danger'},
+  'fluconazole':     {trimester:'All trimesters',   risk:'High-dose fluconazole (150mg+) associated with spontaneous abortion and cardiac defects. Single 150mg dose: use only if benefit outweighs risk. Prefer topical clotrimazole for vaginal candidiasis.', severity:'warn'},
+  'ciprofloxacin|levofloxacin|moxifloxacin': {trimester:'All trimesters', risk:'Fluoroquinolones: potential for arthropathy in developing foetus (animal data). Avoid in pregnancy — use amoxicillin, cefalexin, or nitrofurantoin (before 36 weeks) as alternatives.', severity:'warn'},
+  'clarithromycin':  {trimester:'All trimesters',   risk:'Some evidence of foetal harm in animal studies. Preferred macrolide in pregnancy is erythromycin. Use with caution; avoid in first trimester unless no alternative.', severity:'warn'},
+  'valproate':       {trimester:'All trimesters',   risk:'CONTRAINDICATED — major teratogen. Spina bifida, craniofacial defects, autism, impaired cognition. MHRA requires pregnancy prevention programme. Consult neurology/psychiatry.', severity:'danger'},
+};
+
+// ── PAEDIATRIC DOSE CALCULATOR ────────────────────────────────────
+var PAED_DOSES = {
+  'amoxicillin':       {dose:25, unit:'mg/kg/day', divide:3, max:500,  form:'125mg/5ml (under 5yrs) or 250mg/5ml (5-12yrs)',  note:'Round to nearest 1.25ml (62.5mg increment). Max 500mg TDS.'},
+  'ibuprofen':         {dose:10, unit:'mg/kg',     divide:3, max:400,  form:'100mg/5ml oral suspension',                       note:'Give with food. Not for <3 months or <5kg. Max 400mg/dose, 40mg/kg/day.'},
+  'paracetamol':       {dose:15, unit:'mg/kg',     divide:4, max:1000, form:'120mg/5ml (<6yrs) or 250mg/5ml (6-12yrs)',       note:'Max 4 doses/24hr. Not more often than every 4-6hrs. Max 60mg/kg/day.'},
+  'cefalexin':         {dose:25, unit:'mg/kg/day', divide:2, max:500,  form:'125mg/5ml or 250mg/5ml suspension',              note:'Max 500mg BD. Use twice daily for uncomplicated infections.'},
+  'metronidazole':     {dose:7.5,unit:'mg/kg',     divide:3, max:400,  form:'200mg/5ml oral suspension',                      note:'Max 400mg TDS. BNF Appendix 4 for dose table.'},
+  'erythromycin':      {dose:12.5,unit:'mg/kg',    divide:4, max:500,  form:'125mg/5ml or 250mg/5ml suspension',              note:'Max 500mg QDS. Give 30 mins before food.'},
+  'phenoxymethylpenicillin': {dose:12.5, unit:'mg/kg', divide:4, max:500, form:'125mg/5ml or 250mg/5ml suspension',          note:'Max 500mg QDS. Give 30 mins before food.'},
+  'flucloxacillin':    {dose:12.5,unit:'mg/kg',    divide:4, max:500,  form:'125mg/5ml suspension',                           note:'Give on empty stomach 30 mins before food. Max 500mg QDS.'},
+  'trimethoprim':      {dose:4,  unit:'mg/kg/day', divide:2, max:200,  form:'50mg/5ml oral suspension',                       note:'BNF paediatric dose. Max 200mg BD. Check renal function.'},
+};
+
+function calcPaedDose(){
+  var wt = parseFloat(document.getElementById('obsWt') ? document.getElementById('obsWt').value : '');
+  var drug = (v('rxDrug')||'').toLowerCase();
+  if(!wt || wt<=0 || wt>100) return null; // only for paed weights
+  var key = Object.keys(PAED_DOSES).find(function(k){ return drug.includes(k); });
+  if(!key) return null;
+  var d = PAED_DOSES[key];
+  var totalDayDose = d.dose * wt;
+  var singleDose   = totalDayDose / d.divide;
+  var singleRounded = Math.round(singleDose / 5) * 5; // round to nearest 5mg
+  if(singleRounded > d.max) singleRounded = d.max;
+  return {
+    drug: key, weight: wt,
+    singleDose: singleRounded,
+    times: d.divide,
+    unit: d.unit,
+    form: d.form,
+    note: d.note,
+    displayFreq: {1:'OD',2:'BD',3:'TDS',4:'QDS'}[d.divide]||d.divide+'× daily',
+  };
+}
+
+// ── FEVERPAIN + CENTOR SCORE ──────────────────────────────────────
+var _feverPainScore = null;
+
+function renderFeverPAIN(){
+  return '<div style="background:var(--warning-bg);border:1.5px solid var(--warning-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'
+    +'<span style="font-size:16px">🦠</span>'
+    +'<strong style="color:var(--warning-text);font-size:12px">FeverPAIN Score — Sore Throat Antibiotic Decision</strong>'
+    +'<span style="font-size:10px;color:var(--warning-text);opacity:.8">NHS PFS / SIGN 2022</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--warning-text);margin-bottom:8px">Score each criterion present:</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">'
+    +[
+      ['fp1','Fever ≥38°C in last 24hrs'],
+      ['fp2','Absence of cough or coryza'],
+      ['fp3','Symptom onset ≤3 days'],
+      ['fp4','Severely inflamed tonsils'],
+      ['fp5','Tonsillar exudate or purulent tonsils'],
+    ].map(function(item){
+      return '<label style="display:flex;align-items:flex-start;gap:6px;cursor:pointer;font-size:12px;color:var(--warning-text)">'
+        +'<input type="checkbox" id="'+item[0]+'" onchange="updateFeverPAIN()" style="margin-top:2px"> '+item[1]+'</label>';
+    }).join('')
+    +'</div>'
+    +'<div id="fpResult" style="font-size:12px;color:var(--warning-text);padding:6px 10px;background:var(--bg);border-radius:var(--radius)">Tick criteria above to calculate score</div>'
+    +'<div style="margin-top:6px;font-size:10px;color:var(--warning-text);opacity:.8">FeverPAIN 0-1: No antibiotic. 2-3: Backup prescription. ≥4: Antibiotic likely beneficial (phenoxymethylpenicillin 1st line, clarithromycin if PCN-allergic). Ref: SIGN 2022; NHS PFS sore throat PGD.</div>'
+    +'</div>';
+}
+
+function updateFeverPAIN(){
+  var items = ['fp1','fp2','fp3','fp4','fp5'];
+  var score = items.filter(function(id){ var el=document.getElementById(id); return el&&el.checked; }).length;
+  _feverPainScore = score;
+  var el = document.getElementById('fpResult');
+  if(!el) return;
+  var rec, col;
+  if(score<=1)      { rec='Score '+score+' — No antibiotic indicated. Self-care: analgesia, fluids. Return if not improving in 1 week.'; col='var(--success-text)'; }
+  else if(score<=3) { rec='Score '+score+' — Consider backup/delayed prescription. Antibiotic if symptoms persist >3-5 days or worsen.'; col='var(--warning-text)'; }
+  else              { rec='Score '+score+' — Antibiotic likely beneficial. 1st line: Phenoxymethylpenicillin 500mg QDS for 5-10 days. PCN allergy: Clarithromycin 250mg BD for 5 days. Consider throat swab.'; col='var(--danger-text)'; }
+  el.innerHTML = '<strong style="color:'+col+'">'+rec+'</strong>';
+}
+
+// ── PHQ-9 / GAD-7 ─────────────────────────────────────────────────
+function renderPHQ9(){
+  var items = [
+    'Little interest or pleasure in doing things',
+    'Feeling down, depressed, or hopeless',
+    'Trouble falling or staying asleep, or sleeping too much',
+    'Feeling tired or having little energy',
+    'Poor appetite or overeating',
+    'Feeling bad about yourself — or a failure, or let yourself or family down',
+    'Trouble concentrating on things',
+    'Moving or speaking so slowly / being so restless that others have noticed',
+    'Thoughts that you would be better off dead, or of hurting yourself',
+  ];
+  return '<div style="background:var(--purple-bg);border:1.5px solid var(--purple-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'
+    +'<span style="font-size:16px">🧠</span>'
+    +'<strong style="color:var(--purple-text);font-size:12px">PHQ-9 — Depression Screening</strong>'
+    +'<span style="font-size:10px;color:var(--purple-text);opacity:.8">NICE CG90 / SIGN</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--purple-text);margin-bottom:6px">Over the <strong>last 2 weeks</strong>, how often have you been bothered by the following?</div>'
+    +'<div style="font-size:10px;color:var(--purple-text);margin-bottom:8px;display:flex;justify-content:flex-end;gap:15px;font-weight:700">'
+    +'<span>Not at all (0)</span><span>Several days (1)</span><span>More than half (2)</span><span>Nearly every day (3)</span></div>'
+    +items.map(function(item, i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--purple-border);font-size:11px;color:var(--purple-text);gap:8px">'
+        +'<span style="flex:1">'+item+'</span>'
+        +'<div style="display:flex;gap:8px">'
+        +[0,1,2,3].map(function(v){ return '<label style="cursor:pointer"><input type="radio" name="phq'+i+'" value="'+v+'" onchange="updatePHQ9()"> '+v+'</label>'; }).join('')
+        +'</div></div>';
+    }).join('')
+    +'<div id="phq9Result" style="margin-top:8px;font-size:12px;color:var(--purple-text);padding:6px 10px;background:var(--bg);border-radius:var(--radius)">Answer all questions above to calculate score</div>'
+    +'<div style="margin-top:6px;font-size:10px;color:var(--purple-text);opacity:.8">1-4: Minimal. 5-9: Mild. 10-14: Moderate — consider treatment. 15-19: Moderate-severe. 20-27: Severe — urgent review. Q9 (self-harm) — any score >0 warrants direct assessment. Ref: NICE CG90.</div>'
+    +'</div>';
+}
+
+function updatePHQ9(){
+  var total = 0; var allAnswered = true;
+  for(var i=0;i<9;i++){
+    var checked = document.querySelector('input[name="phq'+i+'"]:checked');
+    if(checked) total += parseInt(checked.value);
+    else allAnswered = false;
+  }
+  var el = document.getElementById('phq9Result');
+  if(!el) return;
+  if(!allAnswered){ el.textContent='Answer all questions above to calculate score'; return; }
+  var sev, col;
+  if(total<=4)       {sev='Minimal depression ('+total+'/27)';col='var(--success-text)';}
+  else if(total<=9)  {sev='Mild depression ('+total+'/27) — watchful waiting, lifestyle, review in 2-4 weeks';col='var(--warning-text)';}
+  else if(total<=14) {sev='Moderate depression ('+total+'/27) — offer active treatment (talking therapy ± antidepressant), GP referral';col='var(--warning-text)';}
+  else if(total<=19) {sev='Moderate-severe depression ('+total+'/27) — antidepressant ± psychological therapy, GP/CMHT review';col='var(--danger-text)';}
+  else               {sev='Severe depression ('+total+'/27) — urgent GP or CMHT review, consider crisis services';col='var(--danger-text)';}
+  var q9checked = document.querySelector('input[name="phq8"]:checked');
+  var q9val = q9checked ? parseInt(q9checked.value) : 0;
+  var selfHarmNote = q9val>0 ? '<div style="margin-top:4px;font-weight:700;color:var(--danger-text)">⚠ Q9 self-harm endorsed (score '+q9val+') — direct risk assessment required. Samaritans: 116 123.</div>' : '';
+  el.innerHTML = '<strong style="color:'+col+'">'+sev+'</strong>'+selfHarmNote;
+}
+
+function renderGAD7(){
+  var items = [
+    'Feeling nervous, anxious, or on edge',
+    'Not being able to stop or control worrying',
+    'Worrying too much about different things',
+    'Trouble relaxing',
+    'Being so restless that it is hard to sit still',
+    'Becoming easily annoyed or irritable',
+    'Feeling afraid as if something awful might happen',
+  ];
+  return '<div style="background:var(--teal-bg);border:1.5px solid var(--teal-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'
+    +'<span style="font-size:16px">😰</span>'
+    +'<strong style="color:var(--teal-text);font-size:12px">GAD-7 — Anxiety Screening</strong>'
+    +'<span style="font-size:10px;color:var(--teal-text);opacity:.8">NICE CG113</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--teal-text);margin-bottom:6px">Over the <strong>last 2 weeks</strong>, how often have you been bothered by:</div>'
+    +items.map(function(item, i){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--teal-border);font-size:11px;color:var(--teal-text);gap:8px">'
+        +'<span style="flex:1">'+item+'</span>'
+        +'<div style="display:flex;gap:8px">'
+        +[0,1,2,3].map(function(v){ return '<label style="cursor:pointer"><input type="radio" name="gad'+i+'" value="'+v+'" onchange="updateGAD7()"> '+v+'</label>'; }).join('')
+        +'</div></div>';
+    }).join('')
+    +'<div id="gad7Result" style="margin-top:8px;font-size:12px;color:var(--teal-text);padding:6px 10px;background:var(--bg);border-radius:var(--radius)">Answer all questions above to calculate score</div>'
+    +'<div style="margin-top:6px;font-size:10px;color:var(--teal-text);opacity:.8">0-4: Minimal. 5-9: Mild. 10-14: Moderate — active treatment. 15-21: Severe — urgent review. Ref: NICE CG113.</div>'
+    +'</div>';
+}
+
+function updateGAD7(){
+  var total=0; var allAnswered=true;
+  for(var i=0;i<7;i++){
+    var checked=document.querySelector('input[name="gad'+i+'"]:checked');
+    if(checked) total+=parseInt(checked.value); else allAnswered=false;
+  }
+  var el=document.getElementById('gad7Result');
+  if(!el) return;
+  if(!allAnswered){el.textContent='Answer all questions above to calculate score';return;}
+  var sev,col;
+  if(total<=4)       {sev='Minimal anxiety ('+total+'/21)';col='var(--success-text)';}
+  else if(total<=9)  {sev='Mild anxiety ('+total+'/21) — monitor, self-management support';col='var(--warning-text)';}
+  else if(total<=14) {sev='Moderate anxiety ('+total+'/21) — talking therapy, consider GP referral';col='var(--warning-text)';}
+  else               {sev='Severe anxiety ('+total+'/21) — urgent active treatment, GP/CMHT review';col='var(--danger-text)';}
+  document.getElementById('gad7Result').innerHTML='<strong style="color:'+col+'">'+sev+'</strong>';
+}
+
+// ── ABCDE SKIN LESION ASSESSMENT ──────────────────────────────────
+function renderABCDE(){
+  return '<div style="background:var(--danger-bg);border:1.5px solid var(--danger-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'
+    +'<span style="font-size:16px">🔍</span>'
+    +'<strong style="color:var(--danger-text);font-size:12px">ABCDE Skin Lesion Assessment</strong>'
+    +'<span style="font-size:10px;color:var(--danger-text);opacity:.8">NICE NG12 / BAD</span>'
+    +'</div>'
+    +[
+      ['A','Asymmetry','Is the lesion asymmetrical? (one half unlike the other)'],
+      ['B','Border','Irregular, ragged, notched, or blurred border?'],
+      ['C','Colour','Variation in colour — multiple shades of brown, black, red, white, or blue?'],
+      ['D','Diameter','Larger than 6mm? (size of a pencil eraser)'],
+      ['E','Evolution','Has the lesion changed in size, shape, colour, or started bleeding/crusting?'],
+    ].map(function(item){
+      return '<div style="display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--danger-border)">'
+        +'<span style="font-size:16px;font-weight:900;color:var(--danger-text);min-width:20px">'+item[0]+'</span>'
+        +'<div style="flex:1">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--danger-text)">'+item[1]+'</div>'
+        +'<div style="font-size:11px;color:var(--danger-text);opacity:.8">'+item[2]+'</div>'
+        +'</div>'
+        +'<label style="display:flex;gap:5px;cursor:pointer;font-size:11px;color:var(--danger-text);flex-shrink:0">'
+        +'<input type="checkbox" id="abcde_'+item[0].toLowerCase()+'" onchange="updateABCDE()"> Present</label>'
+        +'</div>';
+    }).join('')
+    +'<div id="abcdeResult" style="margin-top:8px;font-size:12px;color:var(--danger-text);padding:6px 10px;background:var(--bg);border-radius:var(--radius)">Tick features present to assess</div>'
+    +'<div style="margin-top:6px;font-size:10px;color:var(--danger-text);opacity:.8">≥2 ABCDE features: urgent 2WW dermatology referral. Dermoscopy if available. Ref: NICE NG12; BAD melanoma guidelines.</div>'
+    +'</div>';
+}
+
+function updateABCDE(){
+  var features=['a','b','c','d','e'];
+  var count=features.filter(function(f){ var el=document.getElementById('abcde_'+f); return el&&el.checked; }).length;
+  var el=document.getElementById('abcdeResult');
+  if(!el) return;
+  if(count===0){el.textContent='Tick features present to assess';return;}
+  var msg,col;
+  if(count>=2){msg=count+' ABCDE features present — urgent 2WW dermatology referral indicated (NICE NG12). Document in red flags section. Do not reassure patient.';col='var(--danger-text)';}
+  else{msg='1 ABCDE feature noted — monitor closely. Photograph if possible. Low threshold for 2WW if patient concerns or any change.';col='var(--warning-text)';}
+  el.innerHTML='<strong style="color:'+col+'">'+msg+'</strong>';
+}
+
+// ── INHALER TECHNIQUE REFERENCE ───────────────────────────────────
+var INHALER_GUIDE = {
+  'salbutamol|ventolin|salamol':                      {type:'pMDI',    device:'Pressurised metered-dose inhaler (pMDI)',     spacer:true,  steps:['Shake 3-5 times','Remove cap','Exhale fully away from inhaler','Place mouthpiece in mouth, seal lips','Press canister down and inhale slowly over 3-5 seconds','Hold breath 5-10 seconds','Wait 30 seconds between puffs if needed']},
+  'beclometasone.*mdi|clenil|fostair':                {type:'pMDI',    device:'pMDI (steroid — spacer strongly recommended)',spacer:true,  steps:['Shake 3-5 times','Remove cap','Exhale fully','Press and inhale slowly — spacer highly recommended for steroids','Hold breath 5-10 seconds','Rinse mouth after use (prevents oral candidiasis)']},
+  'turbohaler|symbicort|bricanyl|pulmicort':          {type:'DPI',     device:'Turbohaler (DPI)',                            spacer:false, steps:['Unscrew and remove cap','Hold upright — twist base until click','Exhale fully away from inhaler','Place mouthpiece in mouth','Inhale forcefully and deeply','Remove inhaler, hold breath 5-10 seconds','Replace cap']},
+  'accuhaler|seretide.*accuhaler|advair':             {type:'DPI',     device:'Accuhaler (DPI)',                             spacer:false, steps:['Hold horizontally, open lever','Push lever away to click','Exhale fully away from inhaler','Inhale forcefully','Hold breath 5-10 seconds','Close and click lever back']},
+  'respimat|spiriva.*respimat|stiolto':               {type:'SMI',     device:'Respimat Soft Mist Inhaler',                  spacer:false, steps:['Keep cap closed until use','Twist base 180° in direction of arrows','Press button to prime if new','Open cap','Exhale slowly','Place mouthpiece in mouth','Press release button while inhaling slowly for 10 seconds','Hold breath 10 seconds']},
+  'ellipta|incruse|relvar|anoro|trelegy':             {type:'DPI',     device:'Ellipta (DPI)',                               spacer:false, steps:['Open cover fully (click heard = dose ready)','Exhale away from inhaler','Close lips round mouthpiece','Inhale forcefully and steadily','Remove inhaler, hold breath 3-4 seconds','Close cover']},
+  'nexthaler|foster.*nexthaler':                      {type:'DPI',     device:'NEXThaler (DPI)',                             spacer:false, steps:['Open cover fully','Check dose counter','Exhale away from device','Close lips round mouthpiece','Inhale fast and deeply','Hold breath 5-10 seconds','Close cover']},
+  'novolizer|clickhaler':                             {type:'DPI',     device:'DPI (breath-activated)',                      spacer:false, steps:['Load dose as per device instructions','Exhale fully','Inhale forcefully through device','Hold breath 5-10 seconds']},
+};
+
+function getInhalerGuide(drug){
+  var dl = drug.toLowerCase();
+  for(var key in INHALER_GUIDE){
+    if(new RegExp(key,'i').test(dl)) return INHALER_GUIDE[key];
+  }
+  // Generic guidance if drug is respiratory but device unknown
+  if(/inhaler|inhala|mdi|dpi|spray/.test(dl)) return {
+    type:'Unknown', device:'Inhaler — device type not identified', spacer:false,
+    steps:['Check inhaler technique at every consultation','Demonstrate correct technique','Confirm patient can demonstrate back to you','Provide patient information leaflet','Refer to Asthma + Lung UK: https://www.asthma.org.uk/advice/inhaler-videos/']
+  };
+  return null;
+}
+
+function renderInhalerGuide(drug){
+  var guide = getInhalerGuide(drug);
+  if(!guide) return null;
+  return '<div style="background:var(--info-bg);border:1.5px solid var(--info-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px">'
+    +'<span style="font-size:16px">💨</span>'
+    +'<strong style="color:var(--info-text);font-size:12px">Inhaler Technique — '+guide.device+'</strong>'
+    +(guide.spacer?'<span style="font-size:10px;padding:2px 6px;background:var(--warning-bg);color:var(--warning-text);border-radius:5px;font-weight:700">Spacer recommended</span>':'')
+    +'</div>'
+    +'<ol style="padding-left:18px;margin:0 0 8px;font-size:12px;color:var(--info-text)">'
+    +guide.steps.map(function(s){ return '<li style="margin-bottom:3px">'+s+'</li>'; }).join('')
+    +'</ol>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
+    +'<a href="https://www.asthma.org.uk/advice/inhaler-videos/" target="_blank" rel="noopener" class="evlink evlink-info">Asthma + Lung UK — Inhaler videos ↗</a>'
+    +'<a href="https://www.nice.org.uk/guidance/ng80" target="_blank" rel="noopener" class="evlink evlink-nice">NICE NG80 Asthma ↗</a>'
+    +'<a href="https://www.sign.ac.uk/our-guidelines/british-guideline-on-the-management-of-asthma/" target="_blank" rel="noopener" class="evlink evlink-smc">BTS/SIGN Asthma ↗</a>'
+    +'</div>'
+    +'<div style="margin-top:6px">'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--info-text);cursor:pointer">'
+    +'<input type="checkbox" id="inhalerTechConfirmed" onchange="confirmInhalerTech()"> Inhaler technique demonstrated and confirmed — patient can use device correctly'
+    +'</label>'
+    +'</div>'
+    +'</div>';
+}
+
+function confirmInhalerTech(){
+  var checked = document.getElementById('inhalerTechConfirmed') && document.getElementById('inhalerTechConfirmed').checked;
+  var rxInt = document.getElementById('rxInteractions');
+  if(checked && rxInt){
+    var existing = rxInt.value;
+    if(!existing.includes('Inhaler technique')){
+      rxInt.value = (existing ? existing + '\n' : '') + 'Inhaler technique demonstrated and confirmed at consultation.';
+    }
+  }
+}
+
+// ── FRAX / BONE HEALTH PROMPT ─────────────────────────────────────
+function checkFRAXPrompt(){
+  var pmh = (v('ptPMH')||'').toLowerCase();
+  var meds = (v('ptMeds')||'').toLowerCase();
+  var dob  = document.getElementById('ptDob') ? document.getElementById('ptDob').value : '';
+  if(!dob) return null;
+  var today = new Date(), birth = new Date(dob);
+  var age = today.getFullYear() - birth.getFullYear();
+  if(age < 50) return null;
+
+  var fracRisk = pmh.includes('osteoporosis') || pmh.includes('osteopenia') || pmh.includes('fragility fracture') || pmh.includes('previous fracture');
+  var steroidRisk = /prednisolone|dexamethasone|hydrocortisone|methylprednisolone/.test(meds) || pmh.includes('steroid') || pmh.includes('corticosteroid');
+  if(!fracRisk && !steroidRisk) return null;
+
+  var reasons = [];
+  if(fracRisk) reasons.push('osteoporosis / previous fragility fracture in PMH');
+  if(steroidRisk) reasons.push('long-term corticosteroid use noted');
+
+  return reasons;
+}
+
+// ── CVD/QRISK PROMPT ──────────────────────────────────────────────
+function checkCVDRiskPrompt(){
+  var pmh  = (v('ptPMH')||'').toLowerCase();
+  var meds = (v('ptMeds')||'').toLowerCase();
+  var dob  = document.getElementById('ptDob') ? document.getElementById('ptDob').value : '';
+  var obs  = { sbp: document.getElementById('obsBPS') ? document.getElementById('obsBPS').value : '' };
+
+  if(!dob) return null;
+  var today = new Date(), birth = new Date(dob);
+  var age = today.getFullYear() - birth.getFullYear();
+  if(age < 40) return null;
+
+  var cvdRiskFactors = [];
+  if(pmh.includes('hypertension') || obs.sbp >= 140) cvdRiskFactors.push('hypertension');
+  if(pmh.includes('diabetes') || /metformin|gliclazide|insulin|glipizide/.test(meds)) cvdRiskFactors.push('diabetes');
+  if(pmh.includes('hypercholesterolaemia') || pmh.includes('dyslipidaemia') || /atorvastatin|simvastatin|rosuvastatin|pravastatin/.test(meds)) cvdRiskFactors.push('dyslipidaemia/statin use');
+  if(pmh.includes('smok') || (v('pcSmoke')||'').toLowerCase().includes('current')) cvdRiskFactors.push('smoking');
+  if(pmh.includes('atrial fibrillation') || pmh.includes(' af ') || pmh.includes('af,')) cvdRiskFactors.push('atrial fibrillation');
+
+  if(cvdRiskFactors.length < 1) return null;
+  return cvdRiskFactors;
+}
+
+// ── MEDICATION REVIEW PROMPT ──────────────────────────────────────
+function buildMedReviewPrompt(){
+  var panel = document.getElementById('medReviewPromptPanel');
+  if(!panel) return;
+
+  var pmh    = (v('ptPMH')||'').toLowerCase();
+  var meds   = (v('ptMeds')||'').toLowerCase();
+  var dob    = document.getElementById('ptDob') ? document.getElementById('ptDob').value : '';
+  var medList = (v('ptMeds')||'').trim();
+
+  if(!dob || !medList){ panel.style.display='none'; return; }
+
+  var today = new Date(), birth = new Date(dob);
+  var age = today.getFullYear() - birth.getFullYear();
+
+  var triggers = [];
+
+  // Polypharmacy
+  var medCount = medList.split(/[\n,;]+/).filter(function(m){ return m.trim().length>2; }).length;
+  if(medCount >= 5)  triggers.push({ icon:'💊', msg:'Polypharmacy: '+medCount+' medications documented — structured medication review may be appropriate to assess indication, efficacy, and deprescribing opportunities.', ref:'NICE NG5 Multimorbidity; NES Polypharmacy 7-Steps Tool.' });
+
+  // Long-term opioids
+  if(/morphine|oxycodone|codeine|dihydrocodeine|tramadol|fentanyl|buprenorphine|tapentadol/.test(meds) && !/(acute|post-op|short)/.test(meds)){
+    triggers.push({ icon:'⚠️', msg:'Long-term opioid use noted — review analgesic ladder, opioid dose equivalence, and dependence risk. Consider referral to pain management service if chronic.', ref:'NICE NG193; Faculty of Pain Medicine Opioids Aware.' });
+  }
+
+  // Long-term benzodiazepines
+  if(/diazepam|lorazepam|temazepam|nitrazepam|oxazepam|clonazepam|zopiclone|zolpidem/.test(meds)){
+    triggers.push({ icon:'😴', msg:'Long-term benzodiazepine/Z-drug noted — consider structured withdrawal and tapering plan. Assess falls risk (especially if >65yrs). NHSGGC/Right Decisions Scotland: BZD deprescribing pathway.', ref:'SIGN; NHS Scotland BZD audit tool; NICE TA77.' });
+  }
+
+  // Anticholinergic burden
+  var anticholinergic = ['amitriptyline','nortriptyline','imipramine','oxybutynin','tolterodine','fesoterodine','solifenacin','chlorphenamine','hydroxyzine','promethazine','cyclizine'];
+  var acbDrugs = anticholinergic.filter(function(d){ return meds.includes(d); });
+  if(acbDrugs.length >= 2 || (acbDrugs.length >= 1 && age >= 65)){
+    triggers.push({ icon:'🧠', msg:'Anticholinergic burden: '+acbDrugs.join(', ')+' noted. High anticholinergic burden associated with cognitive impairment, confusion, urinary retention, falls (especially >65yrs). Consider ACB score calculation and deprescribing where appropriate.', ref:'ACB Calculator (anticholinergicranking.com.au); NICE NG97.' });
+  }
+
+  // Long-term PPI
+  if(/omeprazole|lansoprazole|pantoprazole|rabeprazole|esomeprazole/.test(meds)){
+    triggers.push({ icon:'💊', msg:'Long-term PPI use noted — review ongoing indication. Step down to lowest effective dose or try stopping if no clear indication. H.pylori testing if not done. Annual review recommended.', ref:'NHS Scotland PPI prescribing review guidance; SIGN; NICE CKS.' });
+  }
+
+  // Falls risk
+  if(age >= 65 && medCount >= 4){
+    var fallsDrugs = [];
+    if(/diazepam|lorazepam|temazepam|nitrazepam|zopiclone|zolpidem/.test(meds)) fallsDrugs.push('BZD/Z-drug');
+    if(/amitriptyline|nortriptyline|mirtazapine|quetiapine|haloperidol/.test(meds)) fallsDrugs.push('sedating psychotropic');
+    if(/furosemide|bendroflumethiazide|spironolactone/.test(meds)) fallsDrugs.push('diuretic');
+    if(/amlodipine|nifedipine|verapamil|diltiazem/.test(meds)) fallsDrugs.push('calcium channel blocker');
+    if(fallsDrugs.length > 0){
+      triggers.push({ icon:'🚶', msg:'Falls risk: patient ≥65yrs with '+medCount+' medications including fall-risk drugs ('+fallsDrugs.join(', ')+'). Consider formal falls risk assessment and deprescribing/dose reduction where appropriate.', ref:'NICE NG161 Falls in older people; NHS Scotland falls prevention.' });
+    }
+  }
+
+  // FRAX
+  var fraxReasons = checkFRAXPrompt();
+  if(fraxReasons){
+    triggers.push({ icon:'🦴', msg:'Bone health review: '+fraxReasons.join(', ')+'. Consider FRAX score calculation for 10-year fracture risk, DEXA scan if not recent, and bisphosphonate prescribing assessment if indicated.', ref:'NICE TA464 Bisphosphonates; SIGN 142; FRAX tool: https://www.sheffield.ac.uk/FRAX/' });
+  }
+
+  // CVD risk
+  var cvdRisk = checkCVDRiskPrompt();
+  if(cvdRisk){
+    triggers.push({ icon:'❤️', msg:'CVD risk assessment may be due: '+cvdRisk.join(', ')+' noted. Consider QRISK3 calculation if not recently performed, lipid profile review, and BP optimisation.', ref:'NICE NG238 CVD risk; QRISK3: https://qrisk.org/three/' });
+  }
+
+  if(!triggers.length){ panel.style.display='none'; return; }
+
+  panel.style.display = 'block';
+  panel.innerHTML = '<div class="card" style="background:var(--teal-bg);border-color:var(--teal-border)">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<span style="font-size:18px">🔄</span>'
+    +'<h2 style="margin:0;color:var(--teal-text)">Medication review considerations</h2>'
+    +'<span style="font-size:10px;color:var(--teal-text);opacity:.8;font-weight:400">— based on consultation findings</span>'
+    +'</div>'
+    +'<p style="font-size:11px;color:var(--teal-text);margin-bottom:10px">The following have been identified from this consultation. These are prompts only — review at an appropriate appointment. Not all will be actionable today.</p>'
+    +triggers.map(function(t){
+      return '<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--bg);border-radius:var(--radius);margin-bottom:6px;border:0.5px solid var(--teal-border)">'
+        +'<span style="font-size:16px;flex-shrink:0">'+t.icon+'</span>'
+        +'<div style="flex:1">'
+        +'<div style="font-size:12px;color:var(--teal-text);line-height:1.5">'+t.msg+'</div>'
+        +'<div style="font-size:10px;color:var(--teal-text);opacity:.75;margin-top:3px;font-style:italic">📚 '+t.ref+'</div>'
+        +'</div></div>';
+    }).join('')
+    +'</div>';
+}
+
+// ── MASTER: UPDATE ALL CLINICAL TOOLS ────────────────────────────
+function updateClinicalTools(){
+  var drug    = (v('rxDrug')||'').toLowerCase();
+  var pmh     = (v('ptPMH')||'').toLowerCase();
+  var meds    = (v('ptMeds')||'').toLowerCase();
+  var allerg  = (v('ptAllergies')||'').toLowerCase();
+  var dob     = document.getElementById('ptDob') ? document.getElementById('ptDob').value : '';
+  var panel   = document.getElementById('clinicalToolsPanel');
+  if(!panel) return;
+
+  var sections = [];
+
+  // Age calculation
+  var age = null;
+  if(dob){ var today=new Date(),birth=new Date(dob); age=today.getFullYear()-birth.getFullYear(); if(today.getMonth()<birth.getMonth()||(today.getMonth()===birth.getMonth()&&today.getDate()<birth.getDate()))age--; }
+  var isPaed = age !== null && age < 16;
+  var isPregnant = pmh.includes('pregnant') || pmh.includes('pregnancy') || allerg.includes('pregnant');
+
+  // 1. Renal dose flags
+  if(pmh.includes('ckd') || pmh.includes('renal impairment') || pmh.includes('kidney disease') || pmh.includes('dialysis')){
+    Object.keys(RENAL_FLAGS).forEach(function(key){
+      if(new RegExp(key,'i').test(drug)){
+        var rf = RENAL_FLAGS[key];
+        sections.push('<div style="background:var(--danger-bg);border:1.5px solid var(--danger-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:16px">🫘</span>'
+          +'<strong style="color:var(--danger-text);font-size:12px">Renal dose adjustment required</strong>'
+          +'<span style="font-size:10px;padding:1px 6px;border-radius:5px;background:var(--danger-border);color:#fff;font-weight:700">'+rf.threshold+'</span></div>'
+          +'<div style="font-size:12px;color:var(--danger-text);line-height:1.5">'+rf.action+'</div>'
+          +'<div style="font-size:10px;color:var(--danger-text);margin-top:4px;opacity:.8">📚 BNF Appendix 3 — Prescribing in renal impairment. Verify eGFR before prescribing.</div>'
+          +'</div>');
+      }
+    });
+  }
+
+  // 2. Paediatric dose
+  if(isPaed && drug){
+    var paedCalc = calcPaedDose();
+    if(paedCalc){
+      sections.push('<div style="background:var(--info-bg);border:1.5px solid var(--info-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><span style="font-size:16px">👶</span>'
+        +'<strong style="color:var(--info-text);font-size:12px">Paediatric weight-based dose — '+paedCalc.drug+'</strong></div>'
+        +'<div style="background:var(--bg);border-radius:var(--radius);padding:8px 12px;font-size:13px;font-weight:700;color:var(--info-text);margin-bottom:6px">'
+        +'Calculated dose: <strong>'+paedCalc.singleDose+'mg '+paedCalc.displayFreq+'</strong>'
+        +' ('+paedCalc.weight+'kg × '+paedCalc.singleDose/paedCalc.weight+'mg/kg per dose)</div>'
+        +'<div style="font-size:12px;color:var(--info-text)">Formulation: '+paedCalc.form+'</div>'
+        +'<div style="font-size:11px;color:var(--info-text);opacity:.8;margin-top:3px">'+paedCalc.note+'</div>'
+        +'<button onclick="applyPaedDose('+paedCalc.singleDose+',\''+paedCalc.displayFreq+'\')" class="btn" style="font-size:11px;margin-top:6px;background:var(--info-bg);color:var(--info-text);border-color:var(--info-border)">← Apply to dose field</button>'
+        +'<div style="font-size:10px;color:var(--info-text);margin-top:4px;opacity:.75">📚 BNF for Children. Verify weight and dose before prescribing. Confirm with parent/carer.</div>'
+        +'</div>');
+    }
+  }
+
+  // 4. Pregnancy flags
+  if(isPregnant && drug){
+    Object.keys(PREGNANCY_FLAGS).forEach(function(key){
+      if(new RegExp(key,'i').test(drug)){
+        var pf = PREGNANCY_FLAGS[key];
+        sections.push('<div style="background:var(--danger-bg);border:2px solid var(--danger-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="font-size:16px">🤰</span>'
+          +'<strong style="color:var(--danger-text);font-size:12px">Pregnancy prescribing — '+pf.trimester+'</strong></div>'
+          +'<div style="font-size:12px;color:var(--danger-text);line-height:1.5">'+pf.risk+'</div>'
+          +'<div style="font-size:10px;color:var(--danger-text);margin-top:4px;opacity:.8">📚 BNF Appendix 4 — Prescribing in pregnancy. Verify with eMC SPC and UKTIS (www.medicinesinpregnancy.org).</div>'
+          +'</div>');
+      }
+    });
+  }
+
+  // 5. FeverPAIN (sore throat / tonsillitis)
+  var condFocus = (window._activeFocus||'');
+  var dx = (v('workingDiagnosis')||'').toLowerCase();
+  if(condFocus==='sore-throat' || dx.includes('sore throat') || dx.includes('tonsill') || dx.includes('pharyngitis')){
+    if(!document.getElementById('fp1')){
+      sections.push(renderFeverPAIN());
+    }
+  }
+
+  // 6. PHQ-9 / GAD-7 (mental health)
+  if(condFocus==='mental-health' || dx.includes('depression') || dx.includes('anxiety') || dx.includes('low mood')){
+    if(!document.getElementById('phq9Result')) sections.push(renderPHQ9());
+    if(!document.getElementById('gad7Result')) sections.push(renderGAD7());
+  }
+
+  // 7. ABCDE (skin lesion)
+  if(condFocus==='rash' || dx.includes('lesion') || dx.includes('mole') || dx.includes('melanoma') || dx.includes('pigmented')){
+    if(!document.getElementById('abcde_a')) sections.push(renderABCDE());
+  }
+
+  // 8. Inhaler technique
+  if(/inhaler|inhala|salbutamol|beclometasone|budesonide|fluticasone|salmeterol|formoterol|tiotropium|ipratropium|turbohaler|accuhaler|respimat|ellipta/.test(drug)){
+    var inhalerHtml = renderInhalerGuide(drug);
+    if(inhalerHtml) sections.push(inhalerHtml);
+  }
+
+  if(!sections.length){ panel.style.display='none'; return; }
+  panel.style.display = 'block';
+  panel.innerHTML = sections.join('');
+}
+
+function applyPaedDose(dose, freq){
+  setField('rxDose', dose + 'mg');
+  var freqEl = document.getElementById('rxFreq');
+  if(freqEl){
+    var map = {'OD':'Once daily (OD)','BD':'Twice daily (BD)','TDS':'Three times daily (TDS)','QDS':'Four times daily (QDS)'};
+    if(map[freq]) freqEl.value = map[freq];
+  }
+  updateRxSummaryLine();
+}
+
 // ── NATION DEFAULTS ──
 function updateNationDefaults(){
   const nation=v('ptNation');
@@ -4941,17 +5865,18 @@ function updateProgressBar(){
   var pctVal = Math.round(doneCount / results.length * 100);
 
   fill.style.width = pctVal + '%';
-  fill.style.background = pctVal >= 80 ? 'var(--success-text)' : pctVal >= 50 ? 'var(--warning-text)' : 'var(--danger-text)';
+  // Use NHS Blue at all completion levels — no colour-changing, always clean
+  fill.style.background = pctVal >= 80 ? '#005EB8' : pctVal >= 50 ? '#4a86c4' : '#91b4de';
   pct.textContent = pctVal + '%';
-  pct.style.color = pctVal >= 80 ? 'var(--success-text)' : pctVal >= 50 ? 'var(--warning-text)' : 'var(--danger-text)';
+  pct.style.color = '#005EB8';
 
   steps.innerHTML = results.map(function(r){
-    var bg   = r.done ? 'var(--success-bg)' : 'var(--bg3)';
-    var bord = r.done ? 'var(--success-border)' : 'var(--border2)';
-    var col  = r.done ? 'var(--success-text)' : 'var(--text3)';
+    var bg   = r.done ? '#005EB8' : 'var(--bg2)';
+    var bord = r.done ? '#005EB8' : 'var(--border)';
+    var col  = r.done ? '#ffffff' : 'var(--text3)';
     var tick = r.done ? '✓' : '·';
     return '<div title="'+r.label+(r.done?' ✓':' — not yet complete')+'" '
-      +'style="width:22px;height:22px;border-radius:50%;background:'+bg+';border:0.5px solid '+bord+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+col+';cursor:default">'
+      +'style="width:22px;height:22px;border-radius:50%;background:'+bg+';border:1px solid '+bord+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+col+';cursor:default">'
       +tick+'</div>';
   }).join('');
 }
@@ -4963,7 +5888,8 @@ function goStep(n){
   document.querySelectorAll('.step-tab')[n].classList.add('active');
   if(n===2){renderDDX(); if(window._pendingFocus) applyFocusToGrid(window._pendingFocus);}
   if(n===3)updateGPSummary();
-  if(n===4){populateRxEvidenceLinks(); updateRxSafetyLinks(); setTimeout(runSafetyChecks, 100); setTimeout(updateAMSPanel, 150);}
+  if(n===4){populateRxEvidenceLinks(); updateRxSafetyLinks(); setTimeout(runSafetyChecks, 100); setTimeout(updateAMSPanel, 150); setTimeout(updateClinicalTools, 200);}
+  if(n===5){setTimeout(buildMedReviewPrompt, 200);}
   if(n===0){setTimeout(calcComplexity, 100);}
   if(n===8){updateRedFlagPanel();buildSummary();runCompletenessCheck();buildSBAR();}
   updateProgressBar();
@@ -4991,20 +5917,36 @@ function renderSystems(){
     if(!selFlag[sys.key])selFlag[sys.key]=[];
     const hf=selFlag[sys.key].length>0;
     const div=document.createElement('div');
-    div.className='sys-card'+(hf?' has-flags':'');div.id='sc-'+sys.key;
-    div.innerHTML='<div class="sys-top"><div class="sys-name">'+sys.name+'</div><span id="fp-'+sys.key+'" style="display:'+(hf?'inline-flex':'none')+'" class="pill pill-danger">'+selFlag[sys.key].length+'</span></div><div class="sys-sub" id="ss-'+sys.key+'">'+(hf?'Red flags noted':'Tap to assess')+'</div><div class="sys-detail" id="det-'+sys.key+'"></div>';
-    div.addEventListener('click',e=>{if(e.target.closest('button')||e.target.tagName==='TEXTAREA'||e.target.tagName==='A')return;toggleDet(sys.key);});
+    div.className='sys-card sys-card-linear'+(hf?' has-flags':'');div.id='sc-'+sys.key;
+    div.innerHTML=''
+      +'<div class="sys-top" onclick="toggleDetLinear(\''+sys.key+'\')">'
+        +'<div class="sys-name">'+sys.name+'</div>'
+        +'<div style="display:flex;align-items:center;gap:6px">'
+          +'<span id="fp-'+sys.key+'" style="display:'+(hf?'inline-flex':'none')+'" class="pill pill-danger">'+selFlag[sys.key].length+' flag'+(selFlag[sys.key].length!==1?'s':'')+'</span>'
+          +'<span id="sym-'+sys.key+'" style="display:'+(selSym[sys.key].length>0?'inline-flex':'none')+'" class="pill pill-info">'+selSym[sys.key].length+' symptom'+(selSym[sys.key].length!==1?'s':'')+'</span>'
+          +'<span id="sa-arrow-'+sys.key+'" style="font-size:11px;color:var(--text3);transition:transform .2s">▶</span>'
+        +'</div>'
+      +'</div>'
+      +'<div class="sys-detail" id="det-'+sys.key+'"></div>';
     grid.appendChild(div);buildDet(sys);
   });
-  // Re-apply focus if one is active
+  // Auto-expand any system that already has flags
+  SYSTEMS.forEach(sys=>{
+    if((selFlag[sys.key]||[]).length>0) toggleDetLinear(sys.key);
+  });
   if(window._pendingFocus) applyFocusToGrid(window._pendingFocus);
 }
-function toggleDet(key){
-  const det=document.getElementById('det-'+key);const isOpen=det.classList.contains('open');
-  document.querySelectorAll('.sys-detail').forEach(d=>d.classList.remove('open'));
-  document.querySelectorAll('.sys-card').forEach(c=>{const k=c.id.replace('sc-','');if(!(selFlag[k]&&selFlag[k].length>0))c.classList.remove('expanded');});
-  if(!isOpen){det.classList.add('open');const card=document.getElementById('sc-'+key);if(!card.classList.contains('has-flags'))card.classList.add('expanded');}
+
+function toggleDetLinear(key){
+  const det=document.getElementById('det-'+key);
+  const arrow=document.getElementById('sa-arrow-'+key);
+  const isOpen=det.classList.contains('open');
+  det.classList.toggle('open');
+  if(arrow) arrow.style.transform=isOpen?'rotate(0deg)':'rotate(90deg)';
 }
+
+// Legacy — keep for compatibility
+function toggleDet(key){ toggleDetLinear(key); }
 // ── EXAMINATION TEMPLATES (IP scope — all systems) ──────────────────
 const EXAM_TEMPLATES = {
   constitutional: {
@@ -5399,17 +6341,41 @@ function buildDet(sys){
   });
 }
 function toggleItem(el,key,type,val){
-  if(type==='sym'){el.classList.toggle('sel-sym');const arr=selSym[key]||[];const i=arr.indexOf(val);if(i>-1)arr.splice(i,1);else arr.push(val);selSym[key]=arr;}
-  else{el.classList.toggle('sel-flag');const arr=selFlag[key]||[];const i=arr.indexOf(val);if(i>-1)arr.splice(i,1);else arr.push(val);selFlag[key]=arr;updateFD(key);updateSC(key);updateFlagSum();}
+  if(type==='sym'){
+    el.classList.toggle('sel-sym');
+    const arr=selSym[key]||[];const i=arr.indexOf(val);
+    if(i>-1)arr.splice(i,1);else arr.push(val);
+    selSym[key]=arr;
+    updateSC(key);
+  } else {
+    el.classList.toggle('sel-flag');
+    const arr=selFlag[key]||[];const i=arr.indexOf(val);
+    if(i>-1)arr.splice(i,1);else arr.push(val);
+    selFlag[key]=arr;
+    updateFD(key);updateSC(key);updateFlagSum();
+  }
 }
 function updateFD(key){
   const sys=SYSTEMS.find(s=>s.key===key);const el=document.getElementById('fd-'+key);if(!el)return;
   el.innerHTML=(selFlag[key]||[]).map(f=>'<div class="alert-danger"><strong>&#9888; '+f+'</strong><br>'+(sys.flagAlerts[f]||'Clinical judgement required.')+'</div>').join('');
 }
 function updateSC(key){
-  const flags=selFlag[key]||[];const card=document.getElementById('sc-'+key);const pill=document.getElementById('fp-'+key);const sub=document.getElementById('ss-'+key);
-  if(flags.length>0){card.className='sys-card has-flags';pill.style.display='inline-flex';pill.textContent=flags.length;sub.textContent='Red flags noted';}
-  else{card.className='sys-card expanded';pill.style.display='none';sub.textContent='Assessing...';}
+  const flags=selFlag[key]||[];const syms=selSym[key]||[];
+  const card=document.getElementById('sc-'+key);
+  const pill=document.getElementById('fp-'+key);
+  const symPill=document.getElementById('sym-'+key);
+  if(!card) return;
+  if(flags.length>0){
+    card.className='sys-card sys-card-linear has-flags';
+    if(pill){pill.style.display='inline-flex';pill.textContent=flags.length+' flag'+(flags.length!==1?'s':'');}
+  } else {
+    card.className='sys-card sys-card-linear';
+    if(pill) pill.style.display='none';
+  }
+  if(symPill){
+    if(syms.length>0){symPill.style.display='inline-flex';symPill.textContent=syms.length+' symptom'+(syms.length!==1?'s':'');}
+    else symPill.style.display='none';
+  }
 }
 function updateFlagSum(){
   const el=document.getElementById('flagSummaryBox');
@@ -7027,10 +7993,13 @@ function clearAll(){
   document.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
   SYSTEMS.forEach(s=>{selSym[s.key]=[];selFlag[s.key]=[];});
   selUrgency=null;selContactIdx=null;_selectedFormularyDrug=null;resetConsultTimer();
-  ['safetyChecksPanel','complexityPanel','amsPanel'].forEach(function(id){
+  ['safetyChecksPanel','complexityPanel','amsPanel','clinicalToolsPanel','medReviewPromptPanel'].forEach(function(id){
     var el=document.getElementById(id); if(el){el.style.display='none'; el.innerHTML='';}
   });
   var gpLetter=document.getElementById('gpLetterOutput'); if(gpLetter) gpLetter.style.display='none';
+  // Reset definitive diagnosis and no-differential
+  var defDx=document.getElementById('definitiveDiagnosis'); if(defDx) defDx.value='';
+  clearNoDifferential();
   ['999','Urgent','Routine','Self'].forEach(x=>{const el=document.getElementById('urg'+x);if(el)el.className='ubtn';});
   document.getElementById('selfcarePanel').style.display='none';
   const cr=document.getElementById('cjResponse');if(cr)cr.style.display='none';
@@ -8397,6 +9366,7 @@ function selectDrug(i){
   setTimeout(runSafetyChecks, 150);
   updateRxSummaryLine();
   updateAMSPanel();
+  setTimeout(updateClinicalTools, 250);
 }
 
 renderSystems();
